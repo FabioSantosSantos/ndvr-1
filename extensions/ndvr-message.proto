@@ -5,12 +5,21 @@ syntax = "proto3";
 
 package ndn.ndvr.proto;
 
-// Distance Vector Information
+// Uma entidade pode ter vários next hops
+// Cada Next hop terá seu custo assiciado
+
 message DvInfo {
+  message NextHop {
+    repeated string router_id = 1;
+  }
+
   message Entry {
     string prefix = 1;
     uint64 seq = 2;
-    uint32 cost = 3;
+    string originator = 3;
+    NextHop next_hops = 4;
+    uint32 cost = 5;
   }
+
   repeated Entry entry = 1;
 }

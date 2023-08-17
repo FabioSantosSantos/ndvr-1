@@ -10,6 +10,7 @@
 #include <string>
 #include <random>
 
+//#include <ns3/core-module.h>
 #include <ndn-cxx/face.hpp>
 #include <ndn-cxx/interest.hpp>
 #include <ndn-cxx/security/key-chain.hpp>
@@ -17,8 +18,8 @@
 #include <ndn-cxx/security/validator-config.hpp>
 #include <ndn-cxx/util/scheduler.hpp>
 #include <ndn-cxx/util/time.hpp>
-#include <ns3/core-module.h>
-#include <ns3/random-variable-stream.h>
+#include <ndn-cxx/mgmt/nfd/face-event-notification.hpp>
+#include <ndn-cxx/mgmt/nfd/face-monitor.hpp>
 
 #include "routing-table.hpp"
 #include "ndvr-message.pb.h"
@@ -30,7 +31,7 @@ namespace ndvr {
 static const Name kNdvrPrefix = Name("/localhop/ndvr");
 static const Name kNdvrHelloPrefix = Name("/localhop/ndvr/dvannc");
 static const Name kNdvrDvInfoPrefix = Name("/localhop/ndvr/dvinfo");
-static const std::string kRouterTag = "\%C1.Router";
+static const std::string kRouterTag = "%C1.Router";
 
 
 class NeighborEntry {
@@ -105,8 +106,9 @@ private:
 class Ndvr
 {
 public:
-  Ndvr(const ndn::security::SigningInfo& signingInfo, Name network, Name routerName, std::vector<std::string>& np);
+  Ndvr(const ndn::security::SigningInfo& signingInfo, Name network, Name routerName, std::vector<std::string>& np, std::vector<std::string>& faces, std::vector<std::string>& monitorFaces, std::string validationConfig);
   void run();
+  void cleanup();
   void Start();
   void Stop();
   void AdvNamePrefix(std::string name);
@@ -121,16 +123,8 @@ public:
     m_enableUnicastFaces = flag;
   }
 
-  void EnableDSK(bool flag) {
-    m_enableDSK = flag;
-  }
-
-  void SetMaxSecsDSK(uint32_t x) {
-    m_maxSecsDSK = x;
-  }
-
-  void SetMaxSizeDSK(uint32_t x) {
-    m_maxSizeDSK = x;
+  void SetHelloInterval(int x) {
+    m_helloIntervalCur = x;
   }
 
 private:
@@ -166,9 +160,7 @@ private:
   uint64_t CreateUnicastFace(std::string mac);
   std::string GetNeighborToken();
   void UpdateRoutingTableDigest();
-  void ManageSigningInfo();
-  void createDSK(std::string subjectName);
-  const ndn::security::SigningInfo& getSigningInfo();
+  void onFaceEventNotification(const ndn::nfd::FaceEventNotification& faceEventNotification);
 
   void
   buildRouterPrefix()
@@ -241,28 +233,36 @@ private:
     return name.get(kNdvrHelloPrefix.size()+3+2).toNumber();
   }
 
-  time::seconds getSecsSinceLastDSKCert() {
-    return time::duration_cast<time::seconds>(time::steady_clock::now() - m_lastDSKCert);
+  const ndn::security::SigningInfo&
+  getSigningInfo() const
+  {
+    return m_signingInfo;
   }
 
 private:
   const ndn::security::SigningInfo& m_signingInfo;
+  ndn::Face m_face;
   ndn::Scheduler m_scheduler;
   ndn::ValidatorConfig m_validator;
   uint32_t m_seq;
-  ns3::Ptr<ns3::UniformRandomVariable> m_rand; ///< @brief nonce generator
+  //std::uniform_int_distribution<int> m_rand_nonce(0,std::numeric_limits<int>::max());
+  //std::uniform_int_distribution<int> m_rand_backoff(0, 19999);
+  std::uniform_int_distribution<int> m_rand_nonce;
+  std::uniform_int_distribution<int> m_rand_backoff;
   Name m_network;
   Name m_routerName;
-  ndn::Face m_face;
+  std::vector<std::string> m_listenFaces;
+  std::vector<std::string> m_facesToBeMonitored;
 
   ndn::KeyChain m_keyChain;
   Name m_routerPrefix;
   NeighborMap m_neighMap;
   std::map<std::string, uint64_t> m_neighToFaceId;
-  RoutingTable m_routingTable;
+  RoutingManager m_routingTable;
   int m_helloIntervalIni;
   int m_helloIntervalCur;
   int m_helloIntervalMax;
+  time::steady_clock::TimePoint m_nextHelloTime = time::steady_clock::TimePoint::max();
   int m_localRTInterval;
   int m_localRTTimeout;
   bool m_enableUnicastFaces = true;
@@ -280,19 +280,10 @@ private:
   uint32_t m_c = 4;
   /* For DvInfo interest suppression */
   std::unordered_map<std::string, scheduler::EventId> dvinfointerest_event;
-  /* Signing Key separation into long term and short term keys (i.e.,
-   * KSK - Key signing key and DSK - Data signing key) */
-  bool m_enableDSK = false;
-  uint32_t m_maxSecsDSK = 0;
-  uint32_t m_maxSizeDSK = 0;
-  ndn::security::SigningInfo m_signingInfoDSK = ndn::security::SigningInfo();
-  time::steady_clock::TimePoint m_lastDSKCert = time::steady_clock::TimePoint::max();
-  uint64_t m_signedDataAmountDSK = 0;
 
   scheduler::EventId sendhello_event;  /* async send hello event scheduler */
   scheduler::EventId increasehellointerval_event;  /* increase hello interval event scheduler */
   scheduler::EventId replydvinfo_event;  /* group dvinfo replies to avoid duplicate */
-  scheduler::EventId managesigninginfo_event;  /* manage signing info (check and update if needed) */
   std::random_device rdevice_;
   std::mt19937 m_rengine;
   std::uniform_int_distribution<> replydvinfo_dist = std::uniform_int_distribution<>(100, 150);   /* milliseconds */
@@ -303,6 +294,10 @@ private:
   /* m_pivot (int) - iteractor for the circular list of neighbors
    * which points to the next neighbors with priority to get DvInfo */
   NeighborMap::iterator m_pivot;
+
+  /* m_faceMonitor - monitor /localhost/nfd/faces/events through nfd
+   * API - which leverage CallBacks to make NDVR aware of events */
+  ndn::nfd::FaceMonitor m_faceMonitor;
 };
 
 } // namespace ndvr

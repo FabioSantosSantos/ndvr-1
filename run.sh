@@ -5,8 +5,10 @@ LOG=ndvr_build.log
 
 set -o pipefail
 
-# rm logs &&
-# ln -sf /tmp/minindn/ logs &&
+rm -f logs &&
+ln -sf /tmp/minindn/ logs &&
+sudo rm -rf /tmp/minindn/ &&
+sudo mkdir -p /tmp/minindn/ &&
 ./waf configure --debug &&
 ./waf && 
 sudo ./waf install &&

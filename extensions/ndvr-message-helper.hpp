@@ -8,38 +8,6 @@
 namespace ndn {
 namespace ndvr {
 
-inline void EncodeDvInfo(RoutingTable &v, proto::DvInfo *dvinfo_proto) {
-  for (auto it = v.begin(); it != v.end(); ++it) {
-    PathVectors &pathVectors = it->second.GetPathVectors();
-    for (auto itPath = pathVectors.cbegin(); itPath != pathVectors.cend();
-         itPath++) {
-      auto &nextHops = itPath->second;
-      for (auto nextHop : nextHops) {
-        auto *entry = dvinfo_proto->add_entry();
-        entry->set_prefix(it->first);
-        entry->set_seq(it->second.GetSeqNum());
-        entry->set_cost(it->second.GetBestCost());
-        entry->set_originator(it->second.GetOriginator());
-        // entry->set_bestnexthop(it->second.GetLearnedFrom());
-        // entry->set_sec_cost(it->second.GetSecondBestCost());
-
-        proto::DvInfo_NextHop *next_hop = new proto::DvInfo_NextHop();
-        // next_hop->set_cost(nextHop.GetCost());
-        for (std::string router_id : nextHop.GetRouterIds()) {
-          next_hop->add_router_id(router_id);
-        }
-        entry->set_allocated_next_hops(next_hop);
-      }
-    }
-  }
-}
-
-inline void EncodeDvInfo(RoutingTable &v, std::string &out) {
-  proto::DvInfo dvinfo_proto;
-  EncodeDvInfo(v, &dvinfo_proto);
-  dvinfo_proto.AppendToString(&out);
-}
-
 template <typename T> std::string join(const T &v, const std::string &delim) {
   std::ostringstream s;
   for (const auto &i : v) {

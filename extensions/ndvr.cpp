@@ -132,7 +132,7 @@ void Ndvr::registerNeighborPrefix(NeighborEntry &neighbor, uint64_t oldFaceId,
   NS_LOG_DEBUG("AddNeighPrefix=" << neighbor.GetName() << " oldFaceId="
                                  << oldFaceId << " newFaceId=" << newFaceId);
 
-  int32_t metric = CalculateCostToNeigh(neighbor, 0);
+  int32_t metric = 0;
 
   if (oldFaceId != 0) {
     m_routingTable.unregisterPrefix(neighbor.GetName(), oldFaceId);
@@ -325,10 +325,12 @@ void Ndvr::SendHelloInterest() {
 }
 
 void Ndvr::UpdateNeighHelloTimeout(NeighborEntry &neighbor) {
-  auto diff = neighbor.GetLastSeenDelta();
-  time::seconds timeout =
-      time::seconds(2) + 1 * std::max(time::seconds(m_helloIntervalCur), diff);
-  neighbor.SetHelloTimeout(timeout);
+  // auto diff = neighbor.GetLastSeenDelta();
+  // time::seconds timeout =
+  //     time::seconds(2) + 1 * std::max(time::seconds(m_helloIntervalCur),
+  //     diff);
+  // neighbor.SetHelloTimeout(timeout);
+  neighbor.SetHelloTimeout(time::seconds(10));
 }
 
 void Ndvr::RescheduleNeighRemoval(NeighborEntry &neighbor) {
@@ -369,6 +371,7 @@ void Ndvr::RemoveNeighbor(const std::string neigh) {
       it->second.SetNextHopCost(neigh_it->second.GetFaceId(),
                                 std::numeric_limits<uint32_t>::max());
       m_routingTable.unregisterPrefix(it->first, neigh_it->second.GetFaceId());
+      it->second.GetPathVectors().deletePath(neigh_it->second.GetFaceId());
       it->second.IncSeqNum(1);
       has_changed = true;
     }
@@ -634,7 +637,7 @@ void Ndvr::OnHelloInterest(const ndn::Interest &interest, uint64_t inFaceId) {
       wait = false;
     SchedDvInfoInterest(neigh->second, wait);
   } else {
-    NS_LOG_INFO("Skipped DvInfoInterest numPrefixes="
+    NS_LOG_INFO("NDVR converged - Skipped DvInfoInterest numPrefixes="
                 << numPrefixes
                 << " m_routingTable.size()=" << m_routingTable.size()
                 << " newNeigh=" << newNeigh << " version=" << version
@@ -866,12 +869,9 @@ void Ndvr::EncodeDvInfo(std::string &out) {
         auto *entry = dvinfo_proto.add_entry();
         entry->set_prefix(it->first);
         entry->set_seq(routingEntry.GetSeqNum());
-        entry->set_cost(routingEntry.GetBestCost());
         entry->set_originator(routingEntry.GetOriginator());
-        // entry->set_bestnexthop(routingEntry.GetLearnedFrom());
-        // entry->set_sec_cost(routingEntry.GetSecondBestCost());
+        entry->set_cost(nextHop.getCost() + 1);
         proto::DvInfo_NextHop *next_hop = new proto::DvInfo_NextHop();
-        // next_hop->set_cost(nextHop.GetCost());
         next_hop->add_router_id(routerPrefix_Uri);
         for (std::string router_id : nextHop.GetRouterIds()) {
           next_hop->add_router_id(router_id);
@@ -908,13 +908,14 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
 
     // fix Incorrect FaceID - OK
     auto &pathVectors = entry.second.GetPathVectors();
+    pathVectors.setThisRouterPrefix(routerPrefix_Uri);
     auto nexthops = pathVectors.getNextHops(0);
     pathVectors.addPath(neighbor.GetFaceId(), nexthops);
     pathVectors.deletePath(0);
     NS_LOG_INFO(" ---> PathVectors: " << pathVectors);
 
-    // TODO update neigh_cost based on the pathvector list
-    // neigh_cost = pathVectors.GetCost(faceId);
+    // TODO testar funcao abaixo
+    neigh_cost = pathVectors.getCost(neighbor.GetFaceId());
 
     /* Sanity checks: 1) ignore invalid seqNum; 2) ignore invalid Cost */
     if (neigh_seq <= 0 || !isValidCost(neigh_cost))
@@ -931,17 +932,18 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
       // entry.second.SetFaceId(neighbor.GetFaceId());
       // entry.second.SetLearnedFrom(neighbor.GetName());
       m_routingTable.UpsertNextHop(entry.second, neighbor.GetFaceId(),
-                                   CalculateCostToNeigh(neighbor, neigh_cost),
-                                   neighbor.GetName());
+                                   neigh_cost, neighbor.GetName());
 
       has_changed = true;
       continue;
     } else {
       // localRE != null => salvar o caminho recebido pelo DVInfo na tabela
       // roteamento local
+      auto &localREPathVector = localRE->GetPathVectors();
+      localREPathVector.setThisRouterPrefix(routerPrefix_Uri);
       for (auto it = pathVectors.cbegin(); it != pathVectors.cend(); it++) {
         for (auto nextHop : it->second) {
-          localRE->GetPathVectors().addPath(it->first, nextHop);
+          localREPathVector.addPath(it->first, nextHop);
         }
       }
       NS_LOG_INFO(" ---> Local PathVectors: " << localRE->GetPathVectors());
@@ -950,8 +952,8 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
       // falhas de links)
       //  usar timeout ? hello do NDVR informando queda do enlace ?
 
-      // TODO update neigh_cost based on the pathvector list
-      // neigh_cost = localRE->GetPathVectors().GetCost(faceId);
+      // TODO testar se funciona
+      neigh_cost = localREPathVector.getCost(neighbor.GetFaceId());
     }
 
     /* Direct routes with higher sequence number means we should update ours */
@@ -981,8 +983,7 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
       // localRE->SetLearnedFrom("");
       // localRE->SetLearnedFrom(localRE->GetNextHopName(localRE->GetBestFaceId()));
 
-      m_routingTable.UpsertNextHop(*localRE, neighbor.GetFaceId(),
-                                   CalculateCostToNeigh(neighbor, neigh_cost),
+      m_routingTable.UpsertNextHop(*localRE, neighbor.GetFaceId(), neigh_cost,
                                    neighbor.GetName());
 
       has_changed = true;
@@ -1015,7 +1016,6 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
     //   neigh_cost = neigh_sec_cost;
 
     /* compare the Received and Local SeqNum (in Routing Entry)*/
-    neigh_cost = CalculateCostToNeigh(neighbor, neigh_cost);
     if (neigh_seq > localRE->GetSeqNum()) {
       /* check if this update leads to the route being learned from ourself,
        * if that is so it means we should remove this neighbor  */
@@ -1122,10 +1122,6 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
     // ResetHelloInterval();
     SendHelloInterest();
   }
-}
-
-uint32_t Ndvr::CalculateCostToNeigh(NeighborEntry &neighbor, uint32_t cost) {
-  return cost + 1;
 }
 
 bool Ndvr::isValidCost(uint32_t cost) {

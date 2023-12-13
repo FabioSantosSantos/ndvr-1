@@ -1,8 +1,10 @@
 #ifndef _ROUTINGTABLE_H_
 #define _ROUTINGTABLE_H_
 
+#include <limits>
 #include <map>
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
+#include <set>
 
 namespace ndn {
 namespace ndvr {
@@ -50,16 +52,29 @@ private:
 class PathVectors {
 public:
   PathVectors() {}
-  PathVectors(FaceID faceId, NextHop newNextHop) {
+  PathVectors(FaceID faceId, NextHop newNextHop) : PathVectors() {
     addPath(faceId, newNextHop);
   }
 
 public:
+  void setThisRouterPrefix(std::string routerPrefix) {
+    m_routerPrefix_uri = routerPrefix;
+  }
+
+  uint32_t getCost(FaceID faceId) {
+    uint32_t bestcost = std::numeric_limits<uint32_t>::max();
+    for (auto nexthop : m_pathvectors[faceId]) {
+      if (nexthop.getCost() < bestcost)
+        bestcost = nexthop.getCost();
+    }
+    return bestcost;
+  }
+
   uint32_t addPath(FaceID faceId, NextHop &newNexthop) {
     if (m_pathvectors.find(faceId) == m_pathvectors.end()) {
       m_pathvectors[faceId] = std::vector<NextHop>();
     }
-    if (!contains(faceId, newNexthop)) {
+    if (shouldAddPath(faceId, newNexthop)) {
       m_pathvectors[faceId].push_back(newNexthop);
       return 1; // one new path added
     }
@@ -117,11 +132,28 @@ public:
     return false;
   }
 
+  bool shouldAddPath(FaceID faceId, NextHop &newNexthop) {
+    // se ja temos a rota, nao adicione
+    if (contains(faceId, newNexthop)) {
+      return false;
+    }
+    // se ja passou por mim (roteador atual) mais de uma vez, nao adicione a
+    // rota (rota invalida)
+    for (auto routerId : newNexthop.GetRouterIds()) {
+      if (routerId == m_routerPrefix_uri)
+        return false;
+    }
+    // nada que impeca de adicionar a rota
+    return true;
+  }
+
   friend std::ostream &operator<<(std::ostream &stream,
                                   const PathVectors &pathVectors);
 
 private: // faceId: 5 => [[a,b,c], [a,b,c]]
   std::map<FaceID, std::vector<NextHop>> m_pathvectors;
+
+  std::string m_routerPrefix_uri;
 };
 
 class RoutingEntry {

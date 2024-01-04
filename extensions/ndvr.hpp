@@ -30,7 +30,7 @@ namespace ndvr {
 static const Name kNdvrPrefix = Name("/localhop/ndvr");
 static const Name kNdvrHelloPrefix = Name("/localhop/ndvr/dvannc");
 static const Name kNdvrDvInfoPrefix = Name("/localhop/ndvr/dvinfo");
-static const std::string kRouterTag = "%C1.R";
+static const std::string kRouterTag = "%C1.Router";
 
 class NeighborEntry {
 public:

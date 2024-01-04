@@ -30,7 +30,7 @@ from minindn.minindn import Minindn
 from minindn.util import MiniNDNCLI
 from minindn.apps.app_manager import AppManager
 from minindn.apps.nfd import Nfd
-from apps.ndvr import Ndvr
+from minindn.apps.ndvr import Ndvr
 
 DEFAULT_TOPO = '/home/minindn/mini-ndn/examples/topo-two-nodes.conf'
 
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ndn.start()
 
     nfds = AppManager(ndn, ndn.net.hosts, Nfd, logLevel='DEBUG')
-    ndvrs = AppManager(ndn, ndn.net.hosts, Ndvr, logLevel='ndvr.*=DEBUG', network="/n", router_name="C1.R") 
+    ndvrs = AppManager(ndn, ndn.net.hosts, Ndvr, logLevel='ndvr.*=DEBUG') 
 
     MiniNDNCLI(ndn.net)
 

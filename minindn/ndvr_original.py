@@ -30,7 +30,7 @@ from minindn.minindn import Minindn
 from minindn.util import MiniNDNCLI
 from minindn.apps.app_manager import AppManager
 from minindn.apps.nfd import Nfd
-from minindn.apps.nlsr import Nlsr
+from minindn.apps.ndvr import Ndvr
 
 DEFAULT_TOPO = '/home/minindn/mini-ndn/examples/topo-two-nodes.conf'
 
@@ -42,19 +42,8 @@ if __name__ == '__main__':
 
     ndn.start()
 
-    faceDict = {}
-    for host in ndn.net.hosts:
-        faceDict[host.name] = []
-        for i in host.intfs:
-            link = host.intfs[i].link
-            neigh_intf = link.intf1
-            if neigh_intf.node.name == host.name:
-                neigh_intf = link.intf2
-            faceDict[host.name].append([neigh_intf.node.name, host.intfs[i].name, 1])
-
     nfds = AppManager(ndn, ndn.net.hosts, Nfd, logLevel='DEBUG')
-    #nlsrs = AppManager(ndn, ndn.net.hosts, Nlsr, faceDict=faceDict, faceType='ether', logLevel='ndn.*=DEBUG:nlsr.*=DEBUG') 
-    nlsrs = AppManager(ndn, ndn.net.hosts, Nlsr, logLevel='ndn.*=DEBUG:nlsr.*=DEBUG') 
+    ndvrs = AppManager(ndn, ndn.net.hosts, Ndvr, logLevel='ndvr.*=DEBUG') 
 
     MiniNDNCLI(ndn.net)
 

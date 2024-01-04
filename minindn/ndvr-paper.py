@@ -30,7 +30,7 @@ from minindn.minindn import Minindn
 from minindn.util import MiniNDNCLI
 from minindn.apps.app_manager import AppManager
 from minindn.apps.nfd import Nfd
-from minindn.apps.ndvr import Ndvr
+from apps.ndvr import Ndvr
 from minindn.helpers.experiment import Experiment
 from minindn.helpers.nfdc import Nfdc
 
@@ -130,7 +130,7 @@ if __name__ == '__main__':
     info('Starting nfd\n')
     nfds = AppManager(ndn, ndn.net.hosts, Nfd, logLevel='DEBUG')
     info('Starting ndvr\n')
-    ndvrs = AppManager(ndn, ndn.net.hosts, Ndvr, logLevel='ndvr.*=DEBUG', interval=args.interval) 
+    ndvrs = AppManager(ndn, ndn.net.hosts, Ndvr, logLevel='ndvr.*=DEBUG', network="/n", router_name="C1.R", interval=args.interval)
 
     info('Starting mcnFailure()\n')
     mcnFailure(ndn, nfds, ndvrs, args)

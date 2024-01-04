@@ -1,0 +1,79 @@
+mini-ndn> a nfdc fib
+FIB:
+  /ndn/h-site nexthops={faceid=257 (cost=4), faceid=256 (cost=5)}
+  /localhost/nfd/rib nexthops={faceid=258 (cost=0)}
+  /ndn/%C1.Router/e nexthops={faceid=257 (cost=0)}
+  /ndn/f-site nexthops={faceid=257 (cost=2), faceid=256 (cost=3)}
+  /ndn/i-site nexthops={faceid=257 (cost=5), faceid=256 (cost=6)}
+  /ndn/c-site nexthops={faceid=256 (cost=2), faceid=257 (cost=3)}
+  /ndn/e-site nexthops={faceid=257 (cost=1), faceid=256 (cost=4)}
+  /ndn/%C1.Router/b nexthops={faceid=256 (cost=0)}
+  /ndn/k-site nexthops={faceid=256 (cost=5), faceid=257 (cost=6)}
+  /localhop/ndvr/dvannc nexthops={faceid=264 (cost=0), faceid=257 (cost=0), faceid=256 (cost=0)}
+  /ndn/l-site nexthops={faceid=256 (cost=4), faceid=257 (cost=5)}
+  /localhost/nfd nexthops={faceid=1 (cost=0)}
+  /ndn/j-site nexthops={faceid=257 (cost=6), faceid=256 (cost=6)}
+  /localhop/ndvr/dvinfo/ndn/%C1.Router/a nexthops={faceid=264 (cost=0), faceid=257 (cost=0), faceid=256 (cost=0)}
+  /ndn/g-site nexthops={faceid=257 (cost=3), faceid=256 (cost=4)}
+  /ndn/d-site nexthops={faceid=256 (cost=3), faceid=257 (cost=4)}
+  /ndn/b-site nexthops={faceid=256 (cost=1), faceid=257 (cost=4)}
+  /ndn/%C1.Router/a/KEY nexthops={faceid=264 (cost=0)}
+  /localhop/ndvr/dvinfo nexthops={faceid=257 (cost=0), faceid=256 (cost=0)}
+mini-ndn> c nfdc fib
+FIB:
+  /ndn/h-site nexthops={faceid=258 (cost=3), faceid=256 (cost=6), faceid=257 (cost=6)}
+  /localhost/nfd/rib nexthops={faceid=259 (cost=0)}
+  /ndn/f-site nexthops={faceid=258 (cost=1), faceid=256 (cost=4), faceid=257 (cost=8)}
+  /ndn/a-site nexthops={faceid=256 (cost=2), faceid=258 (cost=3), faceid=257 (cost=10)}
+  /ndn/i-site nexthops={faceid=258 (cost=4), faceid=257 (cost=5), faceid=256 (cost=7)}
+  /ndn/e-site nexthops={faceid=258 (cost=2), faceid=256 (cost=3), faceid=257 (cost=9)}
+  /ndn/%C1.Router/b nexthops={faceid=256 (cost=0)}
+  /ndn/k-site nexthops={faceid=257 (cost=3), faceid=258 (cost=6), faceid=256 (cost=9)}
+  /localhop/ndvr/dvinfo/ndn/%C1.Router/c nexthops={faceid=267 (cost=0), faceid=257 (cost=0), faceid=258 (cost=0), faceid=256 (cost=0)}
+  /localhop/ndvr/dvannc nexthops={faceid=267 (cost=0), faceid=257 (cost=0), faceid=258 (cost=0), faceid=256 (cost=0)}
+  /ndn/%C1.Router/f nexthops={faceid=258 (cost=0)}
+  /ndn/l-site nexthops={faceid=257 (cost=2), faceid=258 (cost=7), faceid=256 (cost=10)}
+  /localhost/nfd nexthops={faceid=1 (cost=0)}
+  /ndn/j-site nexthops={faceid=257 (cost=4), faceid=258 (cost=5), faceid=256 (cost=8)}
+  /ndn/%C1.Router/c/KEY nexthops={faceid=267 (cost=0)}
+  /ndn/g-site nexthops={faceid=258 (cost=2), faceid=256 (cost=5), faceid=257 (cost=7)}
+  /ndn/%C1.Router/d nexthops={faceid=257 (cost=0)}
+  /ndn/d-site nexthops={faceid=257 (cost=1), faceid=258 (cost=8), faceid=256 (cost=11)}
+  /ndn/b-site nexthops={faceid=256 (cost=1), faceid=258 (cost=4), faceid=257 (cost=11)}
+  /localhop/ndvr/dvinfo nexthops={faceid=257 (cost=0), faceid=258 (cost=0), faceid=256 (cost=0)}
+mini-ndn> f nfdc fib
+FIB:
+  /ndn/h-site nexthops={faceid=258 (cost=2), faceid=257 (cost=7), faceid=256 (cost=10)}
+  /localhost/nfd/rib nexthops={faceid=259 (cost=0)}
+  /ndn/%C1.Router/e nexthops={faceid=256 (cost=0)}
+  /ndn/%C1.Router/g nexthops={faceid=258 (cost=0)}
+  /ndn/a-site nexthops={faceid=256 (cost=2), faceid=257 (cost=3), faceid=258 (cost=10)}
+  /ndn/i-site nexthops={faceid=258 (cost=3), faceid=257 (cost=6), faceid=256 (cost=9)}
+  /ndn/c-site nexthops={faceid=257 (cost=1), faceid=256 (cost=4), faceid=258 (cost=8)}
+  /ndn/e-site nexthops={faceid=256 (cost=1), faceid=257 (cost=4), faceid=258 (cost=11)}
+  /localhop/ndvr/dvinfo/ndn/%C1.Router/f nexthops={faceid=267 (cost=0), faceid=257 (cost=0), faceid=258 (cost=0), faceid=256 (cost=0)}
+  /ndn/%C1.Router/f/KEY nexthops={faceid=267 (cost=0)}
+  /ndn/%C1.Router/c nexthops={faceid=257 (cost=0)}
+  /ndn/k-site nexthops={faceid=257 (cost=4), faceid=258 (cost=5), faceid=256 (cost=7)}
+  /localhop/ndvr/dvannc nexthops={faceid=267 (cost=0), faceid=257 (cost=0), faceid=258 (cost=0), faceid=256 (cost=0)}
+  /ndn/l-site nexthops={faceid=257 (cost=3), faceid=258 (cost=6), faceid=256 (cost=6)}
+  /localhost/nfd nexthops={faceid=1 (cost=0)}
+  /ndn/j-site nexthops={faceid=258 (cost=4), faceid=257 (cost=5), faceid=256 (cost=8)}
+  /ndn/g-site nexthops={faceid=258 (cost=1), faceid=257 (cost=8), faceid=256 (cost=11)}
+  /ndn/d-site nexthops={faceid=257 (cost=2), faceid=256 (cost=5), faceid=258 (cost=7)}
+  /ndn/b-site nexthops={faceid=257 (cost=2), faceid=256 (cost=3), faceid=258 (cost=9)}
+  /localhop/ndvr/dvinfo nexthops={faceid=257 (cost=0), faceid=258 (cost=0), faceid=256 (cost=0)}
+mini-ndn> exit
+*** Stopping 1 controllers
+c0 
+*** Stopping 13 links
+.............
+*** Stopping 0 switches
+
+*** Stopping 12 hosts
+a b c d e f g h i j k l 
+*** Done
+root@7fe4408a0002:/ndvr# ^C
+root@7fe4408a0002:/ndvr# exit
+exit
+

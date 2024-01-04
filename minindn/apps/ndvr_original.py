@@ -16,9 +16,9 @@ from minindn.minindn import Minindn
 class Ndvr(Application):
     BIN = '/usr/local/bin/ndvrd'
 
-    def __init__(self, node, logLevel='NONE', network='/n', router_name = "C1.R", interval=None):
+    def __init__(self, node, logLevel='NONE', network='/ndn', interval=None):
         Application.__init__(self, node)
-        
+
         self.network = network
         self.interval = interval
         self.node = node
@@ -36,10 +36,10 @@ class Ndvr(Application):
         if self.parameters.get('ndvr-prefixes', None) != None:
             self.prefixes = self.parameters.get('ndvr-prefixes').split(',')
         else:
-            self.prefixes.append('/n/{}'.format(node.name))
+            self.prefixes.append('/ndn/{}-site'.format(node.name))
 
         self.logFile = 'ndvr.log'
-        self.routerName = '/{}{}/{}'.format('%', router_name, node.name)
+        self.routerName = '/{}C1.Router/{}'.format('%', node.name)
         self.validationConfFile = '{}/ndvr-validation.conf'.format(self.homeDir)
 
         possibleConfPaths = ['/usr/local/etc/ndn/ndvr-validation.conf', '/etc/ndn/ndvr-validation.conf']
@@ -87,7 +87,7 @@ class Ndvr(Application):
                         '{}/trust.cert'.format(self.homeDir))
 
         # Create router certificate
-        routerName = '{}/%C1.R/{}'.format(self.network, self.node.name)
+        routerName = '{}/%C1.Router/{}'.format(self.network, self.node.name)
         routerKeyFile = '{}/router.keys'.format(self.homeDir)
         routerCertFile = '{}/router.cert'.format(self.homeDir)
         self.node.cmd('ndnsec-key-gen {} > {}'.format(routerName, routerKeyFile))

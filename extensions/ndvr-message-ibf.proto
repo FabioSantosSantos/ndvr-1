@@ -6,9 +6,10 @@ syntax = "proto3";
 package ndn.ndvr.proto;
 
 
-message DvInfo {
+message DvInfoIBF {
   message NextHop {
-    repeated string router_id = 1;
+    repeated uint64 bits_ibf = 1;
+    uint64 count = 2;
   }
 
   message Entry {
@@ -16,7 +17,6 @@ message DvInfo {
     uint64 seq = 2;
     string originator = 3;
     NextHop next_hops = 4;
-    uint32 cost = 5;
   }
 
   repeated Entry entry = 1;

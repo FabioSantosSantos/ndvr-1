@@ -1,6 +1,7 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
 #include "ndvr.hpp"
+#include "ndvr-message-ibf.pb.h"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/detail/sha1.hpp>
@@ -800,7 +801,7 @@ void Ndvr::OnValidatedDvInfo(const ndn::Data &data) {
 
   /* Extract DvInfo and process Distance Vector update */
   const auto &content = data.getContent();
-  proto::DvInfo dvinfo_proto;
+  proto::DvInfoIBF dvinfo_proto;
   // NS_LOG_DEBUG("Content: size=" << content.value_size());
   // NS_LOG_INFO("Trying to parser  DV-Info...");
   if (!dvinfo_proto.ParseFromArray(content.value(), content.value_size())) {
@@ -814,7 +815,7 @@ void Ndvr::OnValidatedDvInfo(const ndn::Data &data) {
   //   seqNum=" << entry.seq() << " cost=" << entry.cost());
   // }
   // NS_LOG_INFO("Decoding...");
-  auto otherRT = DecodeDvInfo(dvinfo_proto);
+  auto otherRT = DecodeDvInfoIBF(dvinfo_proto);
   processDvInfoFromNeighbor(neigh_it->second, otherRT);
   // NS_LOG_INFO("Done");
 }
@@ -848,34 +849,37 @@ void Ndvr::UpdateRoutingTableDigest() {
   m_routingTable.SetDigest(res);
 }
 
-void Ndvr::EncodeDvInfo(std::string &out) {
-  proto::DvInfo dvinfo_proto;
+void Ndvr::EncodeDvInfoIBF(std::string &out) {
+  proto::DvInfoIBF dvinfo_proto;
   std::string routerPrefix_Uri = m_routerPrefix.toUri();
   NS_LOG_INFO("EncodeDvInfo() - routerPrefix=" << routerPrefix_Uri);
 
   for (auto it = m_routingTable.begin(); it != m_routingTable.end(); ++it) {
     auto &routingEntry = it->second;
     NS_LOG_INFO("EncodeDvInfo() - routingEntry=" << routingEntry.GetName());
-    PathVectors &pathVectors = routingEntry.GetPathVectors();
+    auto &pathVectors = routingEntry.GetPathVectors();
     if (pathVectors.begin() == pathVectors.end()) {
-      NextHop nexthop = NextHop();
+      NextHopIBFBased nexthop = NextHopIBFBased();
       pathVectors.addPath(0, nexthop);
     }
     for (auto itPath = pathVectors.begin(); itPath != pathVectors.end();
          itPath++) {
       NS_LOG_INFO("EncodeDvInfo() - pathVector - faceId: " << itPath->first);
       for (auto &nextHop : itPath->second) {
+        nextHop = nextHop.copy();
         // store table entry into DVInfo Entry
         auto *entry = dvinfo_proto.add_entry();
         entry->set_prefix(it->first);
         entry->set_seq(routingEntry.GetSeqNum());
         entry->set_originator(routingEntry.GetOriginator());
-        entry->set_cost(nextHop.getCost() + 1);
-        proto::DvInfo_NextHop *next_hop = new proto::DvInfo_NextHop();
-        next_hop->add_router_id(routerPrefix_Uri);
-        for (std::string router_id : nextHop.GetRouterIds()) {
-          next_hop->add_router_id(router_id);
+
+        proto::DvInfoIBF_NextHop *next_hop = new proto::DvInfoIBF_NextHop();
+        nextHop.AddRouterId(routerPrefix_Uri);
+      
+        for (auto bit : nextHop.getBitsIBF()) {
+          next_hop->add_bits_ibf(bit);
         }
+        
         entry->set_allocated_next_hops(next_hop);
         NS_LOG_INFO("EncodeDvInfo() - nextHop= " << nextHop);
       }
@@ -885,6 +889,44 @@ void Ndvr::EncodeDvInfo(std::string &out) {
   dvinfo_proto.AppendToString(&out);
   NS_LOG_INFO("EncodeDvInfo()= " << out);
 }
+
+// void Ndvr::EncodeDvInfo(std::string &out) {
+//   proto::DvInfo dvinfo_proto;
+//   std::string routerPrefix_Uri = m_routerPrefix.toUri();
+//   NS_LOG_INFO("EncodeDvInfo() - routerPrefix=" << routerPrefix_Uri);
+
+//   for (auto it = m_routingTable.begin(); it != m_routingTable.end(); ++it) {
+//     auto &routingEntry = it->second;
+//     NS_LOG_INFO("EncodeDvInfo() - routingEntry=" << routingEntry.GetName());
+//     auto &pathVectors = routingEntry.GetPathVectors();
+//     if (pathVectors.begin() == pathVectors.end()) {
+//       NextHop nexthop = NextHop();
+//       pathVectors.addPath(0, nexthop);
+//     }
+//     for (auto itPath = pathVectors.begin(); itPath != pathVectors.end();
+//          itPath++) {
+//       NS_LOG_INFO("EncodeDvInfo() - pathVector - faceId: " << itPath->first);
+//       for (auto &nextHop : itPath->second) {
+//         // store table entry into DVInfo Entry
+//         auto *entry = dvinfo_proto.add_entry();
+//         entry->set_prefix(it->first);
+//         entry->set_seq(routingEntry.GetSeqNum());
+//         entry->set_originator(routingEntry.GetOriginator());
+//         entry->set_cost(nextHop.getCost() + 1);
+//         proto::DvInfo_NextHop *next_hop = new proto::DvInfo_NextHop();
+//         next_hop->add_router_id(routerPrefix_Uri);
+//         for (std::string router_id : nextHop.GetRouterIds()) {
+//           next_hop->add_router_id(router_id);
+//         }
+//         entry->set_allocated_next_hops(next_hop);
+//         NS_LOG_INFO("EncodeDvInfo() - nextHop= " << nextHop);
+//       }
+//     }
+//     NS_LOG_INFO("EncodeDvInfo() - pathVectors= " << pathVectors);
+//   }
+//   dvinfo_proto.AppendToString(&out);
+//   NS_LOG_INFO("EncodeDvInfo()= " << out);
+//}
 
 void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
                                      RoutingTable &otherRT) {
@@ -946,11 +988,11 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
           localREPathVector.addPath(it->first, nextHop);
         }
       }
-      NS_LOG_INFO(" ---> Local PathVectors: " << localRE->GetPathVectors());
+      NS_LOG_INFO("---> Local PathVectors: " << localRE->GetPathVectors());
 
       // TODO expirar as rotas que estao a muito tempo no PathVector (possivel
       // falhas de links)
-      //  usar timeout ? hello do NDVR informando queda do enlace ?
+      // usar timeout ? hello do NDVR informando queda do enlace ?
 
       // TODO testar se funciona
       neigh_cost = localREPathVector.getCost(neighbor.GetFaceId());

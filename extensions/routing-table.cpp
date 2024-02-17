@@ -49,6 +49,7 @@ std::ostream &operator<<(std::ostream &stream, const PathVectors &pathVectors) {
   return stream;
 }
 
+
 // uint64_t RoutingManager::createFace(std::string ifName, std::string
 // linkTypeStr) {
 //   auto netif = m_netmon->getNetworkInterface(ifName);

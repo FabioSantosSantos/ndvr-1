@@ -5,11 +5,158 @@
 #include <map>
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <set>
+#include "ibf.hpp"
 
 namespace ndn {
 namespace ndvr {
 
+class NextHopIBFBased {
+public:
+  NextHopIBFBased() {}
+
+  NextHopIBFBased(int count, std::vector<size_t> bits_ibf)
+    {
+      m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
+    }
+
+  void AddRouterId(std::string router_id) {
+    if (!m_ibf->contains(router_id))
+        m_ibf->insert(router_id);
+  }
+
+  std::vector<size_t> getBitsIBF(){
+      return m_ibf->getBits();
+  }
+
+  bool contains(std::string router_id){return m_ibf->contains(router_id);}
+
+  uint32_t getCost() {return m_ibf->get_count();}
+
+  bool operator==(NextHopIBFBased const &obj) {
+    return this->m_ibf == obj.m_ibf;
+  }
+
+  NextHopIBFBased copy(){
+    NextHopIBFBased next_hop = NextHopIBFBased();
+    next_hop.m_ibf = this->m_ibf->copy();
+    return next_hop;
+  }
+
+  friend std::ostream &operator<<(std::ostream &stream, const NextHopIBFBased &nextHop);
+
+protected:
+  InvertibleBloomFilter *m_ibf;
+};
+
 using FaceID = uint64_t;
+
+class PathVectorsIBFBased {
+public:
+  PathVectorsIBFBased() {}
+  PathVectorsIBFBased(FaceID faceId, NextHopIBFBased newNextHop) : PathVectorsIBFBased() {
+    addPath(faceId, newNextHop);
+  }
+
+public:
+  void setThisRouterPrefix(std::string routerPrefix) {
+    m_routerPrefix_uri = routerPrefix;
+  }
+
+  uint32_t getCost(FaceID faceId) {
+    uint32_t bestcost = std::numeric_limits<uint32_t>::max();
+    for (auto nexthop : m_pathvectors[faceId]) {
+      if (nexthop.getCost() < bestcost)
+        bestcost = nexthop.getCost();
+    }
+    return bestcost;
+  }
+
+  uint32_t addPath(FaceID faceId, NextHopIBFBased &newNexthop) {
+    if (m_pathvectors.find(faceId) == m_pathvectors.end()) {
+      m_pathvectors[faceId] = std::vector<NextHopIBFBased>();
+    }
+    if (shouldAddPath(faceId, newNexthop)) {
+      m_pathvectors[faceId].push_back(newNexthop);
+      return 1; // one new path added
+    }
+    return 0; // no new path added
+  }
+
+  uint32_t addPath(FaceID faceId, std::vector<NextHopIBFBased> &newNexthops) {
+    uint32_t added = 0;
+    for (auto newNextHop : newNexthops) {
+      added += addPath(faceId, newNextHop);
+    }
+    return added;
+  }
+
+  void deletePath(FaceID faceId) { m_pathvectors.erase(faceId); }
+  void deletePath(FaceID faceId, NextHopIBFBased &newNexthop) {
+    auto it = m_pathvectors.find(faceId);
+    if (it == m_pathvectors.end()) {
+      return;
+    }
+    auto &nextHops = it->second;
+    for (auto itNextHop = nextHops.begin(); itNextHop != nextHops.end();
+         itNextHop++) {
+      if (*itNextHop == newNexthop) {
+        nextHops.erase(itNextHop);
+        break;
+      }
+    }
+  }
+
+  const std::vector<NextHopIBFBased> getNextHops(FaceID faceId) {
+    auto it = m_pathvectors.find(faceId);
+    if (it != m_pathvectors.end()) {
+      return it->second;
+    }
+    return std::vector<NextHopIBFBased>();
+  }
+
+  auto cbegin() { return m_pathvectors.cbegin(); }
+  auto cend() { return m_pathvectors.cend(); }
+
+  auto begin() { return m_pathvectors.begin(); }
+  auto end() { return m_pathvectors.end(); }
+
+  bool contains(FaceID faceId, NextHopIBFBased &newNexthop) {
+    auto it = m_pathvectors.find(faceId);
+    if (it == m_pathvectors.end()) {
+      return false;
+    }
+    for (auto nexthop : it->second) {
+      if (nexthop == newNexthop) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool shouldAddPath(FaceID faceId, NextHopIBFBased &newNexthop) {
+    // se ja temos a rota, nao adicione
+    if (contains(faceId, newNexthop)) {
+      return false;
+    }
+    // se ja passou por mim (roteador atual) mais de uma vez, nao adicione a
+    // rota (rota invalida)
+    if (newNexthop.contains(m_routerPrefix_uri)){
+      return false;
+    }
+    
+    // nada que impeca de adicionar a rota
+    return true;
+  }
+
+  friend std::ostream &operator<<(std::ostream &stream,
+                                  const PathVectorsIBFBased &pathVectors);
+
+private: // faceId: 5 => [[a,b,c], [a,b,c]]
+  std::map<FaceID, std::vector<NextHopIBFBased>> m_pathvectors;
+
+  std::string m_routerPrefix_uri;
+};
+
 class NextHop {
 public:
   NextHop() {}
@@ -166,7 +313,7 @@ public:
         m_bestCost(bestCost), m_secBestCost(secBestCost) {}
 
   RoutingEntry(std::string name, uint64_t seqNum, std::string originator,
-               uint32_t cost, PathVectors pathvectors)
+               uint32_t cost, PathVectorsIBFBased pathvectors)
       : m_name(name), m_originator(originator), m_seqNum(seqNum),
         m_bestCost(cost), m_cost(cost), m_pathvectors(pathvectors) {}
 
@@ -186,9 +333,9 @@ public:
 
   std::string GetName() const { return m_name; }
 
-  PathVectors &GetPathVectors() { return m_pathvectors; }
+  PathVectorsIBFBased &GetPathVectors() { return m_pathvectors; }
 
-  void SetPathVectors(PathVectors pathvectors) { m_pathvectors = pathvectors; }
+  void SetPathVectors(PathVectorsIBFBased pathvectors) { m_pathvectors = pathvectors; }
   // void SetNextHops2(NextHop nextHops) { m_nextHops2 = nextHops; }
 
   void SetOriginator(std::string originator) { m_originator = originator; }
@@ -333,7 +480,7 @@ private:
   std::string m_learnedFrom;
   uint32_t m_secBestCost;
   // path vector
-  PathVectors m_pathvectors;
+  PathVectorsIBFBased m_pathvectors;
 };
 
 /**

@@ -20,12 +20,6 @@ const std::string now_str() {
   return curtime;
 }
 
-// #include <ns3/ndnSIM/helper/ndn-fib-helper.hpp>
-// #include <ns3/simulator.h>
-// #include <ns3/ptr.h>
-// #include <ns3/node.h>
-// #include <ns3/node-list.h>
-
 namespace ndn {
 namespace ndvr {
 
@@ -38,7 +32,28 @@ std::ostream &operator<<(std::ostream &stream, const NextHop &nextHop) {
   return stream;
 }
 
+std::ostream &operator<<(std::ostream &stream, const NextHopIBFBased &nextHop) {
+  stream << "[";
+  for (auto bit : nextHop.getBitsIBF()) {
+    stream << bit << ", ";
+  }
+  stream << "]";
+  return stream;
+}
+
 std::ostream &operator<<(std::ostream &stream, const PathVectors &pathVectors) {
+  for (auto faceNextHopsPair : pathVectors.m_pathvectors) {
+    stream << "{ " << faceNextHopsPair.first << ": [";
+    for (auto nexthop : faceNextHopsPair.second) {
+      stream << nexthop << ", ";
+    }
+    stream << "] }" << std::endl;
+  }
+  return stream;
+}
+
+
+std::ostream &operator<<(std::ostream &stream, const PathVectorsIBFBased &pathVectors) {
   for (auto faceNextHopsPair : pathVectors.m_pathvectors) {
     stream << "{ " << faceNextHopsPair.first << ": [";
     for (auto nexthop : faceNextHopsPair.second) {

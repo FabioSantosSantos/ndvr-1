@@ -24,7 +24,7 @@ public:
         m_ibf->insert(router_id);
   }
 
-  std::vector<size_t> getBitsIBF(){
+  std::vector<size_t> getBitsIBF() const{
       return m_ibf->getBits();
   }
 

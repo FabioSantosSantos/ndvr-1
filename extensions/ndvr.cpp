@@ -672,7 +672,7 @@ void Ndvr::ReplyDvInfoInterest(const ndn::Interest &interest) {
   // Set dvinfo
   std::string dvinfo_str;
   if (interest.getName().get(-1).toNumber() > 0) {
-    EncodeDvInfo(dvinfo_str);
+    EncodeDvInfoIBF(dvinfo_str);
   }
   NS_LOG_INFO("Replying DV-Info with encoded data: size="
               << dvinfo_str.size() << " I=" << interest.getName());

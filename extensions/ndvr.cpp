@@ -815,8 +815,13 @@ void Ndvr::OnValidatedDvInfo(const ndn::Data &data) {
   //   seqNum=" << entry.seq() << " cost=" << entry.cost());
   // }
   // NS_LOG_INFO("Decoding...");
-  auto otherRT = DecodeDvInfoIBF(dvinfo_proto);
-  processDvInfoFromNeighbor(neigh_it->second, otherRT);
+  try{
+    auto otherRT = DecodeDvInfoIBF(dvinfo_proto);
+    processDvInfoFromNeighbor(neigh_it->second, otherRT);
+  } catch (const std::string& ex){
+      NS_LOG_ERROR("Erro no OnValidatedDvInfo" << ex);
+  }
+
   // NS_LOG_INFO("Done");
 }
 
@@ -851,6 +856,7 @@ void Ndvr::UpdateRoutingTableDigest() {
 void Ndvr::EncodeDvInfoIBF(std::string &out) {
   proto::DvInfoIBF dvinfo_proto;
   std::string routerPrefix_Uri = m_routerPrefix.toUri();
+  
   NS_LOG_INFO("EncodeDvInfoIBF() - routerPrefix=" << routerPrefix_Uri);
 
   for (auto it = m_routingTable.begin(); it != m_routingTable.end(); ++it) {
@@ -859,32 +865,41 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
     auto &pathVectors = routingEntry.GetPathVectors();
     
     if (pathVectors.begin() == pathVectors.end()) {
+      //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors is empty");
+      //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors previous size: " << pathVectors.size());
       NextHopIBFBased nexthop = NextHopIBFBased();
+      nexthop.AddRouterId(routerPrefix_Uri);
+
       pathVectors.addPath(0, nexthop);
+      //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors new size: " << pathVectors.size());
     }
     
-    for (auto itPath = pathVectors.begin(); itPath != pathVectors.end();
-         itPath++) {
+    for (auto itPath = pathVectors.begin(); itPath != pathVectors.end(); itPath++) {
       NS_LOG_INFO("EncodeDvInfoIBF() - pathVector - faceId: " << itPath->first);
       for (auto &nextHop : itPath->second) {
         nextHop = nextHop.copy();
+        nextHop.AddRouterId(routerPrefix_Uri);
         // store table entry into DVInfo Entry
         auto *entry = dvinfo_proto.add_entry();
         entry->set_prefix(it->first);
         entry->set_seq(routingEntry.GetSeqNum());
         entry->set_originator(routingEntry.GetOriginator());
 
-        proto::DvInfoIBF_NextHop next_hop = entry->next_hops();
-        nextHop.AddRouterId(routerPrefix_Uri);
+        proto::DvInfoIBF_NextHop *next_hop = new proto::DvInfoIBF_NextHop();
+        next_hop->set_count(nextHop.getCount());
+        entry->set_allocated_next_hops(next_hop);
         
         auto bits = nextHop.getBitsIBF();
-        for (auto bit = bits->begin() ; bit != bits->end() ; ++bit) {
-          next_hop.add_bits_ibf(*bit);
+
+        //NS_LOG_INFO("EncodeDvInfoIBF() - bits.size(): " << bits.size());
+
+        for (size_t j = 0; j< bits.size(); j++) {
+          next_hop->add_bits_ibf(bits[j]);
         }
 
-        next_hop.set_count(nextHop.getCount());
-        
-        //entry->set_allocated_next_hops(next_hop);
+        //NS_LOG_INFO("EncodeDvInfoIBF() - nextHop.getCount(): " << nextHop.getCount());
+
+           
         NS_LOG_INFO("EncodeDvInfoIBF() - nextHop= " << nextHop);
       }
     }
@@ -989,7 +1004,9 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
       localREPathVector.setThisRouterPrefix(routerPrefix_Uri);
       for (auto it = pathVectors.cbegin(); it != pathVectors.cend(); it++) {
         for (auto nextHop : it->second) {
-          localREPathVector.addPath(it->first, nextHop);
+          if (!nextHop.contains(routerPrefix_Uri)){
+            localREPathVector.addPath(it->first, nextHop);
+          }
         }
       }
       NS_LOG_INFO("---> Local PathVectors: " << localRE->GetPathVectors());

@@ -36,8 +36,7 @@ std::ostream &operator<<(std::ostream &stream, const NextHopIBFBased &nextHop) {
   stream << "[";
 
   auto bits = nextHop.getBitsIBF();
-
-  for (auto bit = bits->begin() ; bit != bits->end() ; ++bit) {
+  for (auto bit = bits.begin() ; bit != bits.end() ; ++bit) {
     stream << *bit << ", ";
   }
   

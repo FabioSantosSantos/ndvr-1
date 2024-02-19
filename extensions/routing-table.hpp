@@ -16,7 +16,7 @@ public:
     m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS);
   }
 
-  NextHopIBFBased(int count, std::vector<size_t> bits_ibf)
+  NextHopIBFBased(int count, std::vector<size_t> &bits_ibf)
   {
       m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
   }
@@ -26,11 +26,14 @@ public:
         m_ibf->insert(router_id);
   }
 
-  std::vector<size_t> *getBitsIBF() const{
+  std::vector<size_t> getBitsIBF() const{
       return m_ibf->getBits();
   }
 
-  bool contains(std::string router_id){return m_ibf->contains(router_id);}
+  bool contains(std::string router_id){
+    //std::cout << "NextHopIBFBased.contains call" << std::endl;
+    return m_ibf->contains(router_id);
+  }
 
   uint32_t getCost() {return m_ibf->get_count();}
   uint32_t getCount() {return m_ibf->get_count();}
@@ -75,9 +78,12 @@ public:
   }
 
   uint32_t addPath(FaceID faceId, NextHopIBFBased &newNexthop) {
+    //std::cout << "PathVectorsIBFBased.addPath call" << std::endl;
     if (m_pathvectors.find(faceId) == m_pathvectors.end()) {
       m_pathvectors[faceId] = std::vector<NextHopIBFBased>();
+      //std::cout << "PathVectorsIBFBased.addPath empty m_pathvectors" << std::endl;
     }
+
     if (shouldAddPath(faceId, newNexthop)) {
       m_pathvectors[faceId].push_back(newNexthop);
       return 1; // one new path added
@@ -122,8 +128,10 @@ public:
 
   auto begin() { return m_pathvectors.begin(); }
   auto end() { return m_pathvectors.end(); }
+  auto size() {return m_pathvectors.size();}
 
   bool contains(FaceID faceId, NextHopIBFBased &newNexthop) {
+    //std::cout << "PathVectorsIBFBased.contains call" << std::endl;
     auto it = m_pathvectors.find(faceId);
     if (it == m_pathvectors.end()) {
       return false;
@@ -137,6 +145,7 @@ public:
   }
 
   bool shouldAddPath(FaceID faceId, NextHopIBFBased &newNexthop) {
+    //std::cout << "PathVectorsIBFBased.shouldAddPath call" << std::endl;
     // se ja temos a rota, nao adicione
     if (contains(faceId, newNexthop)) {
       return false;

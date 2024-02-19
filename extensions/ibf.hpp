@@ -16,17 +16,26 @@ class InvertibleBloomFilter {
 public:
 
     InvertibleBloomFilter(int size, int hashFunctions)
-        : size(size), hashFunctions(hashFunctions), m_bits(size, 0), count(0) {}
+        : size(size), hashFunctions(hashFunctions), count(0) {
+        	m_bits = new std::vector<size_t>();
+        }
 
     InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<size_t> bits)
-        : size(size), hashFunctions(hashFunctions), m_bits(bits), count(count) {
-        	m_bits.assign(bits.begin(), bits.end());
+        : size(size), hashFunctions(hashFunctions), count(count) {
+        	m_bits = new std::vector<size_t>();
+        	m_bits->assign(bits.begin(), bits.end());
+        }
+
+    InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<size_t> *bits)
+        : size(size), hashFunctions(hashFunctions), count(count) {
+        	m_bits = new std::vector<size_t>();
+        	m_bits->assign(bits->begin(), bits->end());
         }
 
     void insert(const std::string& element) {
         for (int i = 0; i < hashFunctions; ++i) {
             size_t hashValue = hash(element, i);
-            m_bits[hashValue % size] ^= hashValue;
+            (*m_bits)[hashValue % size] ^= hashValue;
         }
         ++count;
     }
@@ -34,7 +43,7 @@ public:
     void remove(const std::string& element) {
         for (int i = 0; i < hashFunctions; ++i) {
             size_t hashValue = hash(element, i);
-            m_bits[hashValue % size] ^= hashValue;
+            (*m_bits)[hashValue % size] ^= hashValue;
         }
         --count;
     }
@@ -42,7 +51,7 @@ public:
     bool contains(const std::string& element) const {
         for (int i = 0; i < hashFunctions; ++i) {
             size_t hashValue = hash(element, i);
-            if ((m_bits[hashValue % size] & hashValue) != hashValue) {
+            if (((*m_bits)[hashValue % size] & hashValue) != hashValue) {
                 return false;
             }
         }
@@ -57,7 +66,7 @@ public:
 	      return false;
 
 	    for (int i = 0; i < objSize; i++) {
-	      if (this->m_bits[i] != obj.m_bits[i]) {
+	      if ((*this->m_bits)[i] != (*obj.m_bits)[i]) {
 	        return false;
 	      }
 	    }
@@ -78,12 +87,12 @@ public:
     	return new InvertibleBloomFilter(this->size, this->hashFunctions, this->count, this->m_bits);
     }
 
-    std::vector<size_t> getBits(){
+    std::vector<size_t> *getBits(){
     	return m_bits;
     }
 
 protected:
-	std::vector<size_t> m_bits = std::vector<size_t>();
+	std::vector<size_t> *m_bits;
 
 private:
     int size;

@@ -12,25 +12,28 @@ namespace ndvr {
 
 class NextHopIBFBased {
 public:
-  NextHopIBFBased() {}
+  NextHopIBFBased() {
+    m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS);
+  }
 
   NextHopIBFBased(int count, std::vector<size_t> bits_ibf)
-    {
+  {
       m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
-    }
+  }
 
   void AddRouterId(std::string router_id) {
     if (!m_ibf->contains(router_id))
         m_ibf->insert(router_id);
   }
 
-  std::vector<size_t> getBitsIBF() const{
+  std::vector<size_t> *getBitsIBF() const{
       return m_ibf->getBits();
   }
 
   bool contains(std::string router_id){return m_ibf->contains(router_id);}
 
   uint32_t getCost() {return m_ibf->get_count();}
+  uint32_t getCount() {return m_ibf->get_count();}
 
   bool operator==(NextHopIBFBased const &obj) {
     return this->m_ibf == obj.m_ibf;
@@ -157,151 +160,8 @@ private: // faceId: 5 => [[a,b,c], [a,b,c]]
   std::string m_routerPrefix_uri;
 };
 
-class NextHop {
-public:
-  NextHop() {}
 
-  NextHop(std::vector<std::string> router_ids) : m_router_ids(router_ids) {}
 
-  void SetRouterIds(std::vector<std::string> router_ids) {
-    m_router_ids = router_ids;
-  }
-
-  std::vector<std::string> GetRouterIds() const { return m_router_ids; }
-
-  void AddRouterId(std::string router_id) {
-    if (*m_router_ids.begin() != router_id)
-      m_router_ids.insert(m_router_ids.begin(), router_id);
-  }
-
-  uint32_t getCost() { return m_router_ids.size(); }
-
-  bool operator==(NextHop const &obj) {
-    int objSize = obj.GetRouterIds().size();
-    int thisSize = this->m_router_ids.size();
-    if (thisSize != objSize)
-      return false;
-    for (int i = 0; i < objSize; i++) {
-      if (this->m_router_ids[i] != obj.m_router_ids[i]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  friend std::ostream &operator<<(std::ostream &stream, const NextHop &nextHop);
-
-private:
-  std::vector<std::string> m_router_ids; // [a,b,c]
-                                         // [a,b]
-};
-
-class PathVectors {
-public:
-  PathVectors() {}
-  PathVectors(FaceID faceId, NextHop newNextHop) : PathVectors() {
-    addPath(faceId, newNextHop);
-  }
-
-public:
-  void setThisRouterPrefix(std::string routerPrefix) {
-    m_routerPrefix_uri = routerPrefix;
-  }
-
-  uint32_t getCost(FaceID faceId) {
-    uint32_t bestcost = std::numeric_limits<uint32_t>::max();
-    for (auto nexthop : m_pathvectors[faceId]) {
-      if (nexthop.getCost() < bestcost)
-        bestcost = nexthop.getCost();
-    }
-    return bestcost;
-  }
-
-  uint32_t addPath(FaceID faceId, NextHop &newNexthop) {
-    if (m_pathvectors.find(faceId) == m_pathvectors.end()) {
-      m_pathvectors[faceId] = std::vector<NextHop>();
-    }
-    if (shouldAddPath(faceId, newNexthop)) {
-      m_pathvectors[faceId].push_back(newNexthop);
-      return 1; // one new path added
-    }
-    return 0; // no new path added
-  }
-
-  uint32_t addPath(FaceID faceId, std::vector<NextHop> &newNexthops) {
-    uint32_t added = 0;
-    for (auto newNextHop : newNexthops) {
-      added += addPath(faceId, newNextHop);
-    }
-    return added;
-  }
-
-  void deletePath(FaceID faceId) { m_pathvectors.erase(faceId); }
-  void deletePath(FaceID faceId, NextHop &newNexthop) {
-    auto it = m_pathvectors.find(faceId);
-    if (it == m_pathvectors.end()) {
-      return;
-    }
-    auto &nextHops = it->second;
-    for (auto itNextHop = nextHops.begin(); itNextHop != nextHops.end();
-         itNextHop++) {
-      if (*itNextHop == newNexthop) {
-        nextHops.erase(itNextHop);
-        break;
-      }
-    }
-  }
-
-  const std::vector<NextHop> getNextHops(FaceID faceId) {
-    auto it = m_pathvectors.find(faceId);
-    if (it != m_pathvectors.end()) {
-      return it->second;
-    }
-    return std::vector<NextHop>();
-  }
-
-  auto cbegin() { return m_pathvectors.cbegin(); }
-  auto cend() { return m_pathvectors.cend(); }
-
-  auto begin() { return m_pathvectors.begin(); }
-  auto end() { return m_pathvectors.end(); }
-
-  bool contains(FaceID faceId, NextHop &newNexthop) {
-    auto it = m_pathvectors.find(faceId);
-    if (it == m_pathvectors.end()) {
-      return false;
-    }
-    for (auto nexthop : it->second) {
-      if (nexthop == newNexthop) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  bool shouldAddPath(FaceID faceId, NextHop &newNexthop) {
-    // se ja temos a rota, nao adicione
-    if (contains(faceId, newNexthop)) {
-      return false;
-    }
-    // se ja passou por mim (roteador atual) mais de uma vez, nao adicione a
-    // rota (rota invalida)
-    for (auto routerId : newNexthop.GetRouterIds()) {
-      if (routerId == m_routerPrefix_uri)
-        return false;
-    }
-    // nada que impeca de adicionar a rota
-    return true;
-  }
-
-  friend std::ostream &operator<<(std::ostream &stream,
-                                  const PathVectors &pathVectors);
-
-private: // faceId: 5 => [[a,b,c], [a,b,c]]
-  std::map<FaceID, std::vector<NextHop>> m_pathvectors;
-
-  std::string m_routerPrefix_uri;
-};
 
 class RoutingEntry {
 public:

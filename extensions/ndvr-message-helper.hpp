@@ -1,7 +1,6 @@
 #ifndef _NDVR_HELPER_HPP_
 #define _NDVR_HELPER_HPP_
 
-#include "ndvr-message.pb.h"
 #include "ndvr-message-ibf.pb.h"
 #include "routing-table.hpp"
 

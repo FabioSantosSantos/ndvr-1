@@ -21,8 +21,8 @@
 #include <ndn-cxx/util/time.hpp>
 
 #include "ndvr-message-helper.hpp"
-#include "ndvr-message.pb.h"
 #include "routing-table.hpp"
+#include "ndvr-message-ibf.pb.h"
 
 namespace ndn {
 namespace ndvr {

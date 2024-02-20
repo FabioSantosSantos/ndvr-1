@@ -1,7 +1,6 @@
 /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 
 #include "ndvr.hpp"
-#include "ndvr-message-ibf.pb.h"
 #include <algorithm>
 #include <boost/algorithm/string.hpp>
 #include <boost/uuid/detail/sha1.hpp>
@@ -960,7 +959,7 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
     uint32_t neigh_cost = entry.second.GetBestCost();
 
     NS_LOG_INFO(
-        "DEBUG DE SOCORRO Custo da entrada em processDvInfoFromNeighbor "
+        "Custo da entrada em processDvInfoFromNeighbor "
         << neigh_cost);
 
     NS_LOG_INFO("===>> prefix=" << neigh_prefix << " seqNum=" << neigh_seq

@@ -16,17 +16,6 @@ static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::map;
 
 // Ref: https://github.com/daankolthof/bloomfilter/blob/master/bloomfilter/bloomfilter.h
 
-template <typename T> std::string join2(const T &v, const std::string &delim) {
-  std::ostringstream s;
-  for (const auto &i : v) {
-    if (&i != &v[0]) {
-      s << delim;
-    }
-    s << i;
-  }
-  return s.str();
-}
-
 class InvertibleBloomFilter {
 public:
 

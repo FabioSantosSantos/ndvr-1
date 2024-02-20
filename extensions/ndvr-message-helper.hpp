@@ -5,6 +5,7 @@
 #include "routing-table.hpp"
 
 #include <iostream>
+
 namespace ndn {
 namespace ndvr {
 
@@ -39,17 +40,16 @@ inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
               << ", count = " << count
               << std::endl;
 
-    // TODO add multiple nexthops
-    std::vector<size_t> bits;
+    std::vector<size_t> numbers;
 
-    for (int j = 0; j < entry.next_hops().bits_ibf().size(); ++j) {
-      bits.push_back(entry.next_hops().bits_ibf(j));
+    for (int j = 0; j < entry.next_hops().ibf_numbers().size(); ++j) {
+      numbers.push_back(entry.next_hops().ibf_numbers(j));
     }
 
-    std::cout << "  next hops (bits) = " << join(bits, ",") << std::endl;
+    std::cout << "  next hops (bits) = [" << join(numbers, ",") << "]" << std::endl;
     // std::cout << "### >> prefix     :" << routerPrefix_Uri << std::endl;
 
-    auto nextHop = NextHopIBFBased(count, bits);
+    auto nextHop = NextHopIBFBased(count, numbers);
 
     auto it = prefixPathVector.find(prefix);
 

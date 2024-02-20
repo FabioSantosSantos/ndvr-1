@@ -35,7 +35,7 @@ namespace ndvr {
 std::ostream &operator<<(std::ostream &stream, const NextHopIBFBased &nextHop) {
   stream << "[";
 
-  auto bits = nextHop.getBitsIBF();
+  auto bits = nextHop.getNumbers();
   for (auto bit = bits.begin() ; bit != bits.end() ; ++bit) {
     stream << *bit << ", ";
   }

@@ -888,12 +888,12 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
         next_hop->set_count(nextHop.getCount());
         entry->set_allocated_next_hops(next_hop);
         
-        auto bits = nextHop.getBitsIBF();
+        auto numbers = nextHop.getNumbers();
 
         //NS_LOG_INFO("EncodeDvInfoIBF() - bits.size(): " << bits.size());
 
-        for (size_t j = 0; j< bits.size(); j++) {
-          next_hop->add_bits_ibf(bits[j]);
+        for (size_t j = 0; j< numbers.size(); j++) {
+          next_hop->add_ibf_numbers(numbers[j]);
         }
 
         //NS_LOG_INFO("EncodeDvInfoIBF() - nextHop.getCount(): " << nextHop.getCount());
@@ -1003,11 +1003,11 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
       localREPathVector.setThisRouterPrefix(routerPrefix_Uri);
       for (auto it = pathVectors.cbegin(); it != pathVectors.cend(); it++) {
         for (auto nextHop : it->second) {
-          if (!nextHop.contains(routerPrefix_Uri)){
-            localREPathVector.addPath(it->first, nextHop);
-          }
+          localREPathVector.addPath(it->first, nextHop);
         }
+
       }
+      
       NS_LOG_INFO("---> Local PathVectors: " << localRE->GetPathVectors());
 
       // TODO expirar as rotas que estao a muito tempo no PathVector (possivel

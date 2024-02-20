@@ -1,11 +1,12 @@
 #ifndef _ROUTINGTABLE_H_
 #define _ROUTINGTABLE_H_
 
+#include "ibf.hpp"
 #include <limits>
 #include <map>
 #include <ndn-cxx/mgmt/nfd/controller.hpp>
 #include <set>
-#include "ibf.hpp"
+
 
 namespace ndn {
 namespace ndvr {
@@ -26,8 +27,8 @@ public:
         m_ibf->insert(router_id);
   }
 
-  std::vector<size_t> getBitsIBF() const{
-      return m_ibf->getBits();
+  std::vector<size_t> getNumbers() const{
+      return m_ibf->getNumbers();
   }
 
   bool contains(std::string router_id){

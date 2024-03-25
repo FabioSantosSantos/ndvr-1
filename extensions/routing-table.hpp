@@ -37,10 +37,23 @@ public:
   }
 
   uint32_t getCost() {return m_ibf->get_count();}
-  uint32_t getCount() {return m_ibf->get_count();}
+  uint32_t getCount() const {return m_ibf->get_count();}
 
   bool operator==(NextHopIBFBased const &obj) {
-    return this->m_ibf == obj.m_ibf;
+    auto objSize = obj.getCount();
+    auto thisSize = getCount();
+
+    if (thisSize != objSize)
+      return false;
+
+    auto other_numbers = obj.getNumbers();
+    auto this_numbers = getNumbers();
+
+    std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
+    std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
+
+    return others_set == this_set;
+    //return this->m_ibf == obj.m_ibf;
   }
 
   NextHopIBFBased copy(){
@@ -138,10 +151,13 @@ public:
       return false;
     }
     for (auto nexthop : it->second) {
+      //std::cout << "compare " << nexthop << " and " << newNexthop << std::endl;
       if (nexthop == newNexthop) {
+       // std::cout << "EQUALS" << std::endl;
         return true;
       }
     }
+    //std::cout << "NOT EQUALS" << std::endl;
     return false;
   }
 
@@ -163,6 +179,31 @@ public:
 
   friend std::ostream &operator<<(std::ostream &stream,
                                   const PathVectorsIBFBased &pathVectors);
+
+  void removeRepetitions(){
+    std::map<FaceID, std::vector<NextHopIBFBased>> newPathVectors;
+
+    for (auto it = m_pathvectors.cbegin(); it != m_pathvectors.cend(); it++) {
+      newPathVectors[it->first] = std::vector<NextHopIBFBased>();
+   
+      for (auto nextHop : it->second) {
+        bool found = false;
+        for (auto innerNextHop: newPathVectors[it->first]){
+          if (innerNextHop == nextHop){
+              found = true;
+              //std::cout << "FOUND REPETITION: " << nextHop << std::endl;
+              break;
+          }
+        }
+
+        if (!found){
+          newPathVectors[it->first].push_back(nextHop);
+        }
+       }
+    }
+
+    m_pathvectors =  newPathVectors;
+  }
 
 private: // faceId: 5 => [[a,b,c], [a,b,c]]
   std::map<FaceID, std::vector<NextHopIBFBased>> m_pathvectors;

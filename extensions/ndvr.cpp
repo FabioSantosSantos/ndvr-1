@@ -864,20 +864,37 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
     auto &pathVectors = routingEntry.GetPathVectors();
     
     if (pathVectors.begin() == pathVectors.end()) {
-      //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors is empty");
-      //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors previous size: " << pathVectors.size());
       NextHopIBFBased nexthop = NextHopIBFBased();
       nexthop.AddRouterId(routerPrefix_Uri);
 
       pathVectors.addPath(0, nexthop);
       //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors new size: " << pathVectors.size());
     }
-    
+
     for (auto itPath = pathVectors.begin(); itPath != pathVectors.end(); itPath++) {
       NS_LOG_INFO("EncodeDvInfoIBF() - pathVector - faceId: " << itPath->first);
+
+      std::vector<NextHopIBFBased> seenNextHops;
+
       for (auto &nextHop : itPath->second) {
+        //NS_LOG_INFO("EncodeDvInfoIBF() - nextHop BEFORE= " << nextHop);
         nextHop = nextHop.copy();
         nextHop.AddRouterId(routerPrefix_Uri);
+
+        bool seen = false;
+        for (auto seenNextHop : seenNextHops) {
+          if (seenNextHop == nextHop) {
+            NS_LOG_INFO("EncodeDvInfoIBF() - SKIPPING repeated nextHop = " << seenNextHop);
+            seen = true;
+            break;
+          }
+        }
+
+        if (seen) break;
+
+        seenNextHops.push_back(nextHop);
+
+
         // store table entry into DVInfo Entry
         auto *entry = dvinfo_proto.add_entry();
         entry->set_prefix(it->first);
@@ -902,6 +919,7 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
         NS_LOG_INFO("EncodeDvInfoIBF() - nextHop= " << nextHop);
       }
     }
+    pathVectors.removeRepetitions();
     NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors= " << pathVectors);
   }
   dvinfo_proto.AppendToString(&out);
@@ -1007,6 +1025,8 @@ void Ndvr::processDvInfoFromNeighbor(NeighborEntry &neighbor,
         }
 
       }
+
+      localRE->GetPathVectors().removeRepetitions();
       
       NS_LOG_INFO("---> Local PathVectors: " << localRE->GetPathVectors());
 

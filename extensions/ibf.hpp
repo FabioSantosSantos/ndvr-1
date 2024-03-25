@@ -9,7 +9,7 @@
 
 
 
-static const int IBF_DEFAULT_SIZE = 50;
+static const int IBF_DEFAULT_SIZE = 20;
 static const int IBF_DEFAULT_QTD_HASH_FUNCTIONS = 3;
 //static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::vector;
 static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::map;
@@ -48,9 +48,23 @@ public:
     }
     
     bool operator==(InvertibleBloomFilter const &obj) {
-    	 if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector)
-    	 	return *dynamic_cast<VectorIndexer*>(this->m_indexer) == *dynamic_cast<VectorIndexer*>(obj.m_indexer); 
-	     return *dynamic_cast<MapIndexer*>(this->m_indexer) == *dynamic_cast<MapIndexer*>(obj.m_indexer);
+        int objSize = obj.get_count();
+        int thisSize = this->get_count();
+
+        if (thisSize != objSize)
+          return false;
+
+        auto other_numbers = obj.getNumbers();
+        auto this_numbers = obj.getNumbers();
+
+        std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
+        std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
+
+        return others_set == this_set;
+
+    	 // if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector)
+    	 // 	return *dynamic_cast<VectorIndexer*>(this->m_indexer) == *dynamic_cast<VectorIndexer*>(obj.m_indexer); 
+	     // return *dynamic_cast<MapIndexer*>(this->m_indexer) == *dynamic_cast<MapIndexer*>(obj.m_indexer);
   	}
 
     bool is_empty() const {

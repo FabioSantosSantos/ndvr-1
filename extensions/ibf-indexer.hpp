@@ -83,7 +83,7 @@ public:
     	std::vector<size_t> numbers;
 
     	for(bool number: m_numbers){
-    		numbers.push_back(1 ? number : 0);
+    		numbers.push_back(number ? 1: 0);
     	}
 
         return numbers;
@@ -107,12 +107,21 @@ public:
 
     BooleanVectorIndexer(int size, int hashFunctions)
         : AbstractIndexer(size, hashFunctions){
-            m_numbers = std::vector<bool>(size, 0);
+            m_numbers = std::vector<bool>(size, false);
         }
 
     BooleanVectorIndexer(int size, int hashFunctions, int count, std::vector<size_t> numbers)
         : AbstractIndexer(size, hashFunctions, count) {
             m_numbers = this->convertToBoolean(numbers);
+        }
+
+     BooleanVectorIndexer(int size, int hashFunctions, int count, std::vector<bool> numbers)
+        : AbstractIndexer(size, hashFunctions, count) {
+            m_numbers = std::vector<bool>();
+
+            for (bool number: numbers) {
+            	m_numbers.push_back(number);
+          }
         }
     ~BooleanVectorIndexer(){}
 protected:
@@ -135,7 +144,7 @@ protected:
 
     bool _contains(const std::string& element, int index){
         auto index_ = get_index(element, index);
-        return m_numbers[index_] == true;
+        return m_numbers[index_];
     }
 
     void _remove(const std::string& element, int index){

@@ -35,18 +35,12 @@ public:
             }else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
                 m_indexer = new MapIndexer(size, hashFunctions);
             }else{
-                m_indexer = new BooleanVectorIndexer(size, hashFunctions);
+                m_indexer = new BooleanVectorIndexer(size, count, hashFunctions, numbers);
             }
         }
 
     InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<bool> numbers){
-        if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector){
-            m_indexer = new VectorIndexer(size, hashFunctions);
-        }else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
-            m_indexer = new MapIndexer(size, hashFunctions);
-        }else{
-            m_indexer = new BooleanVectorIndexer(size, hashFunctions);
-        }
+        m_indexer = new BooleanVectorIndexer(size, hashFunctions, count, numbers);
     }
 
     void insert(const std::string& element) {

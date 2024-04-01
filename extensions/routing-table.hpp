@@ -17,10 +17,10 @@ public:
     m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS);
   }
 
-  NextHopIBFBased(int count, std::vector<size_t> &bits_ibf)
-  {
-      m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
-  }
+  //NextHopIBFBased(int count, std::vector<size_t> &bits_ibf)
+  //{
+      //m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
+  //}
 
   NextHopIBFBased(int count, std::vector<bool> &bits_ibf)
   {

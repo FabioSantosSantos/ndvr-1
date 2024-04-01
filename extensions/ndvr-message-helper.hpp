@@ -20,6 +20,8 @@ template <typename T> std::string join(const T &v, const std::string &delim) {
   return s.str();
 }
 
+
+
 inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
   RoutingTable dvinfo;
   // d-site => [[a,b,c], ...]
@@ -40,13 +42,21 @@ inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
               << ", count = " << count
               << std::endl;
 
-    std::vector<size_t> numbers;
+    std::vector<bool> numbers;
 
     for (int j = 0; j < entry.next_hops().ibf_numbers().size(); ++j) {
       numbers.push_back(entry.next_hops().ibf_numbers(j));
     }
 
-    std::cout << "  next hops (bits) = [" << join(numbers, ",") << "]" << std::endl;
+
+    std::vector<size_t> int_numbers;
+
+    for(auto number: numbers){
+       int_numbers.push_back(number? 1: 0);
+    }
+
+
+    std::cout << "  next hops (bits) = [" << join(int_numbers, ",") << "]" << std::endl;
     // std::cout << "### >> prefix     :" << routerPrefix_Uri << std::endl;
 
     auto nextHop = NextHopIBFBased(count, numbers);

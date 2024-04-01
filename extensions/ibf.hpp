@@ -12,7 +12,7 @@
 static const int IBF_DEFAULT_SIZE = 20;
 static const int IBF_DEFAULT_QTD_HASH_FUNCTIONS = 3;
 //static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::vector;
-static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::map;
+static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::boolean_vector;
 
 // Ref: https://github.com/daankolthof/bloomfilter/blob/master/bloomfilter/bloomfilter.h
 
@@ -22,18 +22,32 @@ public:
     InvertibleBloomFilter(int size, int hashFunctions){
         	if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector){
         		m_indexer = new VectorIndexer(size, hashFunctions);
-        	}else{
+        	}else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
     			m_indexer = new MapIndexer(size, hashFunctions);
-        	}
+        	}else{
+                m_indexer = new BooleanVectorIndexer(size, hashFunctions);
+            }
         }
 
     InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<size_t> numbers){
         	if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector){
-        		m_indexer = new VectorIndexer(size, hashFunctions, count, numbers);
-        	}else{
-    			m_indexer = new MapIndexer(size, hashFunctions, count, numbers);
-        	}
+                m_indexer = new VectorIndexer(size, hashFunctions);
+            }else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
+                m_indexer = new MapIndexer(size, hashFunctions);
+            }else{
+                m_indexer = new BooleanVectorIndexer(size, hashFunctions);
+            }
         }
+
+    InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<bool> numbers){
+        if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector){
+            m_indexer = new VectorIndexer(size, hashFunctions);
+        }else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
+            m_indexer = new MapIndexer(size, hashFunctions);
+        }else{
+            m_indexer = new BooleanVectorIndexer(size, hashFunctions);
+        }
+    }
 
     void insert(const std::string& element) {
     	m_indexer->insert(element);
@@ -57,10 +71,10 @@ public:
         auto other_numbers = obj.getNumbers();
         auto this_numbers = obj.getNumbers();
 
-        std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
-        std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
+        //std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
+        //std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
 
-        return others_set == this_set;
+        return other_numbers == this_numbers;
 
     	 // if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector)
     	 // 	return *dynamic_cast<VectorIndexer*>(this->m_indexer) == *dynamic_cast<VectorIndexer*>(obj.m_indexer); 

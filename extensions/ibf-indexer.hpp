@@ -8,7 +8,7 @@
 #include <set>
 
 
-enum IndexerType {vector, map};
+enum IndexerType {vector, map, boolean_vector};
 
 class AbstractIndexer {
 public:
@@ -73,6 +73,74 @@ protected:
 
     uint64_t hash(const std::string& element, int index) {
             return std::hash<std::string>{}(element + std::to_string(index));
+    }
+
+};
+
+class BooleanVectorIndexer: public AbstractIndexer{
+public:
+    std::vector<size_t> getNumbers(){
+    	std::vector<size_t> numbers;
+
+    	for(bool number: m_numbers){
+    		numbers.push_back(1 ? number : 0);
+    	}
+
+        return numbers;
+    }
+
+    bool operator==(BooleanVectorIndexer &obj){
+        int objSize = obj.get_count();
+        int thisSize = this->get_count();
+
+        if (thisSize != objSize)
+          return false;
+
+        auto other_numbers = obj.getNumbers();
+        for (int i = 0; i < objSize; i++) {
+          if (m_numbers[i] != other_numbers[i]) {
+            return false;
+          }
+        }
+        return true;
+    }
+
+    BooleanVectorIndexer(int size, int hashFunctions)
+        : AbstractIndexer(size, hashFunctions){
+            m_numbers = std::vector<bool>(size, 0);
+        }
+
+    BooleanVectorIndexer(int size, int hashFunctions, int count, std::vector<size_t> numbers)
+        : AbstractIndexer(size, hashFunctions, count) {
+            m_numbers = this->convertToBoolean(numbers);
+        }
+    ~BooleanVectorIndexer(){}
+protected:
+     std::vector<bool> m_numbers;
+
+    std::vector<bool> convertToBoolean(const std::vector<size_t> &numbers){
+    	std::vector<bool> bool_numbers;
+
+    	for(size_t number: numbers){
+    		bool_numbers.push_back(number == 1);
+    	}
+
+        return bool_numbers;
+    }
+
+    void _insert(const std::string& element, int index){
+        int index_ = get_index(element, index);
+        m_numbers[index_] = true;
+    }
+
+    bool _contains(const std::string& element, int index){
+        auto index_ = get_index(element, index);
+        return m_numbers[index_] == true;
+    }
+
+    void _remove(const std::string& element, int index){
+        int index_ = get_index(element, index);
+        m_numbers[index_] = false;
     }
 
 };

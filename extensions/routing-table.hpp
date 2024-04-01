@@ -22,6 +22,11 @@ public:
       m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
   }
 
+  NextHopIBFBased(int count, std::vector<bool> &bits_ibf)
+  {
+      m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
+  }
+
   void AddRouterId(std::string router_id) {
     if (!m_ibf->contains(router_id))
         m_ibf->insert(router_id);
@@ -49,10 +54,10 @@ public:
     auto other_numbers = obj.getNumbers();
     auto this_numbers = getNumbers();
 
-    std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
-    std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
+    //std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
+    //std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
 
-    return others_set == this_set;
+    return other_numbers == this_numbers;
     //return this->m_ibf == obj.m_ibf;
   }
 

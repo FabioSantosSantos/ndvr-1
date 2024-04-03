@@ -909,8 +909,8 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
 
         //NS_LOG_INFO("EncodeDvInfoIBF() - bits.size(): " << bits.size());
 
-        for (size_t j = 0; j< numbers.size(); j++) {
-          next_hop->add_ibf_numbers(numbers[j]);
+        for (size_t j = 0; j < numbers.size(); j++) {
+          next_hop->add_ibf_numbers(numbers[j]==1);
         }
 
         //NS_LOG_INFO("EncodeDvInfoIBF() - nextHop.getCount(): " << nextHop.getCount());

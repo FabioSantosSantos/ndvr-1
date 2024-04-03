@@ -56,19 +56,24 @@ public:
     }
     
     bool operator==(InvertibleBloomFilter const &obj) {
-        int objSize = obj.get_count();
-        int thisSize = this->get_count();
+        //std::cout << "InvertibleBloomFilter == " << std::endl;
+        return this->m_indexer->isEquals(obj.m_indexer);
 
-        if (thisSize != objSize)
-          return false;
+        // int objSize = obj.get_count();
+        // int thisSize = this->get_count();
 
-        auto other_numbers = obj.getNumbers();
-        auto this_numbers = obj.getNumbers();
+        // if (thisSize != objSize)
+        //   return false;
+
+        // auto other_numbers = obj.getNumbers();
+        // auto this_numbers = obj.getNumbers();
 
         //std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
         //std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
 
-        return other_numbers == this_numbers;
+      
+
+        // return other_numbers == this_numbers;
 
     	 // if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector)
     	 // 	return *dynamic_cast<VectorIndexer*>(this->m_indexer) == *dynamic_cast<VectorIndexer*>(obj.m_indexer); 

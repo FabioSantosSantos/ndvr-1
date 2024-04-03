@@ -55,6 +55,7 @@ public:
 
     virtual std::vector<size_t> getNumbers() = 0;
     virtual ~AbstractIndexer() = default;
+    virtual bool isEquals(AbstractIndexer *other) = 0;
 
 protected:
     int m_size;
@@ -72,7 +73,7 @@ protected:
     }
 
     uint64_t hash(const std::string& element, int index) {
-            return std::hash<std::string>{}(element + std::to_string(index));
+        return std::hash<std::string>{}(element + std::to_string(index));
     }
 
 };
@@ -82,50 +83,48 @@ public:
     std::vector<size_t> getNumbers(){
     	std::vector<size_t> numbers;
 
-    	for(bool number: m_numbers){
+    	for(bool number: m_bool_numbers){
     		numbers.push_back(number ? 1: 0);
     	}
 
         return numbers;
     }
 
-    bool operator==(BooleanVectorIndexer &obj){
-        int objSize = obj.get_count();
-        int thisSize = this->get_count();
+    bool isEquals(AbstractIndexer *other){
+    	BooleanVectorIndexer *otherBoolVector = dynamic_cast<BooleanVectorIndexer*>(other);
 
-        if (thisSize != objSize)
-          return false;
+    	for (int i=0; i < this->getSize();i++){
+    		if(m_bool_numbers[i] != otherBoolVector->m_bool_numbers[i]){
+    			return false;
+    		}
+    	}
 
-        auto other_numbers = obj.getNumbers();
-        for (int i = 0; i < objSize; i++) {
-          if (m_numbers[i] != other_numbers[i]) {
-            return false;
-          }
-        }
-        return true;
+    	return true;
+
     }
+
 
     BooleanVectorIndexer(int size, int hashFunctions)
         : AbstractIndexer(size, hashFunctions){
-            m_numbers = std::vector<bool>(size, false);
+            m_bool_numbers = std::vector<bool>(size, false);
         }
 
     BooleanVectorIndexer(int size, int hashFunctions, int count, std::vector<size_t> numbers)
         : AbstractIndexer(size, hashFunctions, count) {
-            m_numbers = this->convertToBoolean(numbers);
+            m_bool_numbers = this->convertToBoolean(numbers);
         }
 
      BooleanVectorIndexer(int size, int hashFunctions, int count, std::vector<bool> numbers)
         : AbstractIndexer(size, hashFunctions, count) {
-            m_numbers = std::vector<bool>();
+            m_bool_numbers = std::vector<bool>();
 
             for (bool number: numbers) {
-            	m_numbers.push_back(number);
+            	m_bool_numbers.push_back(number);
           }
         }
     ~BooleanVectorIndexer(){}
 protected:
-     std::vector<bool> m_numbers;
+     std::vector<bool> m_bool_numbers;
 
     std::vector<bool> convertToBoolean(const std::vector<size_t> &numbers){
     	std::vector<bool> bool_numbers;
@@ -139,23 +138,24 @@ protected:
 
     void _insert(const std::string& element, int index){
         int index_ = get_index(element, index);
-        m_numbers[index_] = true;
+        m_bool_numbers[index_] = true;
     }
 
     bool _contains(const std::string& element, int index){
         auto index_ = get_index(element, index);
-        return m_numbers[index_];
+        return m_bool_numbers[index_];
     }
 
     void _remove(const std::string& element, int index){
         int index_ = get_index(element, index);
-        m_numbers[index_] = false;
+        m_bool_numbers[index_] = false;
     }
 
 };
 
 class VectorIndexer: public AbstractIndexer{
 public:
+	bool isEquals(AbstractIndexer *other){return false;}
     std::vector<size_t> getNumbers(){
         return m_numbers;
     }
@@ -254,6 +254,8 @@ public:
 
         return others_set == this_set;
     }
+
+    bool isEquals(AbstractIndexer *other){return false;}
 
 protected:
     std::map<size_t, size_t> m_numbers;

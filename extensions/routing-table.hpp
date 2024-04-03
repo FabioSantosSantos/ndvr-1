@@ -45,20 +45,20 @@ public:
   uint32_t getCount() const {return m_ibf->get_count();}
 
   bool operator==(NextHopIBFBased const &obj) {
-    auto objSize = obj.getCount();
-    auto thisSize = getCount();
+    // auto objSize = obj.getCount();
+    // auto thisSize = getCount();
 
-    if (thisSize != objSize)
-      return false;
+    // if (thisSize != objSize)
+    //   return false;
 
-    auto other_numbers = obj.getNumbers();
-    auto this_numbers = getNumbers();
+    // auto other_numbers = obj.getNumbers();
+    // auto this_numbers = getNumbers();
 
     //std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
     //std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
 
-    return other_numbers == this_numbers;
-    //return this->m_ibf == obj.m_ibf;
+    //return other_numbers == this_numbers;
+    return *this->m_ibf == *obj.m_ibf;
   }
 
   NextHopIBFBased copy(){

@@ -5,6 +5,7 @@
 #include "routing-table.hpp"
 
 #include <iostream>
+#include <bitset>
 
 namespace ndn {
 namespace ndvr {
@@ -35,6 +36,7 @@ inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
     auto originator = entry.originator();
     auto cost = entry.next_hops().count();
     auto count =  entry.next_hops().count();
+    auto number = entry.next_hops().number();
 
     std::cout << "###### DecodeDvInfo ######" << std::endl;
     std::cout << "  prefix = " << prefix << ", seq = " << seq
@@ -42,24 +44,11 @@ inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
               << ", count = " << count
               << std::endl;
 
-    std::vector<bool> numbers;
 
-    for (int j = 0; j < entry.next_hops().ibf_numbers().size(); ++j) {
-      numbers.push_back(entry.next_hops().ibf_numbers(j));
-    }
+    std::cout << "  next hops (number) = " << number << std::endl;
+    std::cout << "  next hops (bits) = " << std::bitset<64>(number) << std::endl;
 
-
-    std::vector<size_t> int_numbers;
-
-    for(auto number: numbers){
-       int_numbers.push_back(number? 1: 0);
-    }
-
-
-    std::cout << "  next hops (bits) = [" << join(int_numbers, ",") << "]" << std::endl;
-    // std::cout << "### >> prefix     :" << routerPrefix_Uri << std::endl;
-
-    auto nextHop = NextHopIBFBased(count, numbers);
+    auto nextHop = NextHopIBFBased(count, number);
 
     auto it = prefixPathVector.find(prefix);
 

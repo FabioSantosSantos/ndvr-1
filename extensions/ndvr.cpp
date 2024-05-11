@@ -903,19 +903,9 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
 
         proto::DvInfoIBF_NextHop *next_hop = new proto::DvInfoIBF_NextHop();
         next_hop->set_count(nextHop.getCount());
+        next_hop->set_number(nextHop.getNumber());
         entry->set_allocated_next_hops(next_hop);
-        
-        auto numbers = nextHop.getNumbers();
-
-        //NS_LOG_INFO("EncodeDvInfoIBF() - bits.size(): " << bits.size());
-
-        for (size_t j = 0; j < numbers.size(); j++) {
-          next_hop->add_ibf_numbers(numbers[j]==1);
-        }
-
-        //NS_LOG_INFO("EncodeDvInfoIBF() - nextHop.getCount(): " << nextHop.getCount());
-
-           
+                   
         NS_LOG_INFO("EncodeDvInfoIBF() - nextHop= " << nextHop);
       }
     }

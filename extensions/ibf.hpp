@@ -9,7 +9,7 @@
 
 
 
-static const int IBF_DEFAULT_SIZE = 80;
+static const int IBF_DEFAULT_SIZE = 64;
 static const int IBF_DEFAULT_QTD_HASH_FUNCTIONS = 12;
 //static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::vector;
 static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::boolean_vector;
@@ -20,28 +20,13 @@ class InvertibleBloomFilter {
 public:
 
     InvertibleBloomFilter(int size, int hashFunctions){
-        	if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector){
-        		m_indexer = new VectorIndexer(size, hashFunctions);
-        	}else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
-    			m_indexer = new MapIndexer(size, hashFunctions);
-        	}else{
-                m_indexer = new BooleanVectorIndexer(size, hashFunctions);
-            }
-        }
-
-    InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<size_t> numbers){
-        	if (IBF_DEFAULT_INDEXER_TYPE == IndexerType::vector){
-                m_indexer = new VectorIndexer(size, hashFunctions);
-            }else if(IBF_DEFAULT_INDEXER_TYPE == IndexerType::map){
-                m_indexer = new MapIndexer(size, hashFunctions);
-            }else{
-                m_indexer = new BooleanVectorIndexer(size, hashFunctions, count, numbers);
-            }
-        }
-
-    InvertibleBloomFilter(int size, int hashFunctions, int count, std::vector<bool> numbers){
-        m_indexer = new BooleanVectorIndexer(size, hashFunctions, count, numbers);
+        m_indexer = new SingleNumberIndexer(size, hashFunctions);
     }
+
+    InvertibleBloomFilter(int size, int hashFunctions, int count, size_t number){
+        m_indexer = new SingleNumberIndexer(size, hashFunctions, count, number);
+    }
+
 
     void insert(const std::string& element) {
     	m_indexer->insert(element);
@@ -59,11 +44,7 @@ public:
         return this->m_indexer->isEquals(obj.m_indexer);
   	}
 
-    bool is_empty() const {
-        return get_count() == 0;
-    }
-
-    int get_count() const {
+    int getCount() const {
         return m_indexer->getCount();
     }
 
@@ -71,15 +52,15 @@ public:
     	return new InvertibleBloomFilter(this->m_indexer->getSize(), 
     		this->m_indexer->getHashFunctions(), 
     		this->m_indexer->getCount(), 
-    		this->m_indexer->getNumbers());
+    		this->m_indexer->getNumber());
     }
 
-    std::vector<size_t> getNumbers() const{
-    	return m_indexer->getNumbers();
+    size_t getNumber() const{
+    	return m_indexer->getNumber();
     }
 
 protected:
-	AbstractIndexer *m_indexer;
+	SingleNumberIndexer *m_indexer;
 
 };
 

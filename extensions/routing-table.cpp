@@ -10,6 +10,7 @@
 
 #include <chrono>
 #include <ctime>
+#include <bitset>
 
 const std::string now_str() {
   char curtime[30];
@@ -23,37 +24,13 @@ const std::string now_str() {
 namespace ndn {
 namespace ndvr {
 
-// std::ostream &operator<<(std::ostream &stream, const NextHop &nextHop) {
-//   stream << "[";
-//   for (auto routerId : nextHop.m_router_ids) {
-//     stream << routerId << ", ";
-//   }
-//   stream << "]";
-//   return stream;
-// }
 
 std::ostream &operator<<(std::ostream &stream, const NextHopIBFBased &nextHop) {
   stream << "[";
-
-  auto bits = nextHop.getNumbers();
-  for (auto bit = bits.begin() ; bit != bits.end() ; ++bit) {
-    stream << *bit << ", ";
-  }
-  
+  stream << std::bitset<64>(nextHop.getNumber()).to_string();  
   stream << "]";
   return stream;
 }
-
-// std::ostream &operator<<(std::ostream &stream, const PathVectors &pathVectors) {
-//   for (auto faceNextHopsPair : pathVectors.m_pathvectors) {
-//     stream << "{ " << faceNextHopsPair.first << ": [";
-//     for (auto nexthop : faceNextHopsPair.second) {
-//       stream << nexthop << ", ";
-//     }
-//     stream << "] }" << std::endl;
-//   }
-//   return stream;
-// }
 
 
 std::ostream &operator<<(std::ostream &stream, const PathVectorsIBFBased &pathVectors) {

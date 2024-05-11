@@ -8,7 +8,7 @@ package ndn.ndvr.proto;
 
 message DvInfoIBF {
   message NextHop {
-    repeated bool ibf_numbers = 1;
+    uint64 number = 1;
     uint32 count = 2;
   }
 

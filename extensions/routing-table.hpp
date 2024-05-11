@@ -22,9 +22,9 @@ public:
       //m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
   //}
 
-  NextHopIBFBased(int count, std::vector<bool> &bits_ibf)
+  NextHopIBFBased(int count, size_t number)
   {
-      m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
+      m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, number);
   }
 
   void AddRouterId(std::string router_id) {
@@ -32,8 +32,8 @@ public:
         m_ibf->insert(router_id);
   }
 
-  std::vector<size_t> getNumbers() const{
-      return m_ibf->getNumbers();
+  size_t getNumber() const{
+      return m_ibf->getNumber();
   }
 
   bool contains(std::string router_id){
@@ -41,23 +41,10 @@ public:
     return m_ibf->contains(router_id);
   }
 
-  uint32_t getCost() {return m_ibf->get_count();}
-  uint32_t getCount() const {return m_ibf->get_count();}
+  uint32_t getCost() {return m_ibf->getCount();}
+  uint32_t getCount() const {return m_ibf->getCount();}
 
   bool operator==(NextHopIBFBased const &obj) {
-    // auto objSize = obj.getCount();
-    // auto thisSize = getCount();
-
-    // if (thisSize != objSize)
-    //   return false;
-
-    // auto other_numbers = obj.getNumbers();
-    // auto this_numbers = getNumbers();
-
-    //std::set<size_t> others_set(other_numbers.begin(), other_numbers.end());
-    //std::set<size_t> this_set(this_numbers.begin(), this_numbers.end());
-
-    //return other_numbers == this_numbers;
     return *this->m_ibf == *obj.m_ibf;
   }
 

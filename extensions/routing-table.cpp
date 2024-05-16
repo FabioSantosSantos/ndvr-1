@@ -26,9 +26,7 @@ namespace ndvr {
 
 
 std::ostream &operator<<(std::ostream &stream, const NextHopIBFBased &nextHop) {
-  stream << "[";
-  stream << std::bitset<64>(nextHop.getNumber()).to_string();  
-  stream << "]";
+  stream << "[" << std::bitset<64>(nextHop.getNumber()).to_string() << "]";
   return stream;
 }
 

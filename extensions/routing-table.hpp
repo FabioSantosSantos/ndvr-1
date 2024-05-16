@@ -17,11 +17,6 @@ public:
     m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS);
   }
 
-  //NextHopIBFBased(int count, std::vector<size_t> &bits_ibf)
-  //{
-      //m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, bits_ibf);
-  //}
-
   NextHopIBFBased(int count, size_t number)
   {
       m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, number);
@@ -37,7 +32,6 @@ public:
   }
 
   bool contains(std::string router_id){
-    //std::cout << "NextHopIBFBased.contains call" << std::endl;
     return m_ibf->contains(router_id);
   }
 
@@ -84,10 +78,8 @@ public:
   }
 
   uint32_t addPath(FaceID faceId, NextHopIBFBased &newNexthop) {
-    //std::cout << "PathVectorsIBFBased.addPath call" << std::endl;
     if (m_pathvectors.find(faceId) == m_pathvectors.end()) {
       m_pathvectors[faceId] = std::vector<NextHopIBFBased>();
-      //std::cout << "PathVectorsIBFBased.addPath empty m_pathvectors" << std::endl;
     }
 
     if (shouldAddPath(faceId, newNexthop)) {
@@ -137,24 +129,19 @@ public:
   auto size() {return m_pathvectors.size();}
 
   bool contains(FaceID faceId, NextHopIBFBased &newNexthop) {
-    //std::cout << "PathVectorsIBFBased.contains call" << std::endl;
     auto it = m_pathvectors.find(faceId);
     if (it == m_pathvectors.end()) {
       return false;
     }
     for (auto nexthop : it->second) {
-      //std::cout << "compare " << nexthop << " and " << newNexthop << std::endl;
       if (nexthop == newNexthop) {
-       // std::cout << "EQUALS" << std::endl;
         return true;
       }
     }
-    //std::cout << "NOT EQUALS" << std::endl;
     return false;
   }
 
   bool shouldAddPath(FaceID faceId, NextHopIBFBased &newNexthop) {
-    //std::cout << "PathVectorsIBFBased.shouldAddPath call" << std::endl;
     // se ja temos a rota, nao adicione
     if (contains(faceId, newNexthop)) {
       return false;
@@ -183,7 +170,6 @@ public:
         for (auto innerNextHop: newPathVectors[it->first]){
           if (innerNextHop == nextHop){
               found = true;
-              //std::cout << "FOUND REPETITION: " << nextHop << std::endl;
               break;
           }
         }

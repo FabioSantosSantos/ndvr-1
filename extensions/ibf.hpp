@@ -9,10 +9,7 @@
 
 
 
-static const int IBF_DEFAULT_SIZE = 64;
 static const int IBF_DEFAULT_QTD_HASH_FUNCTIONS = 12;
-//static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::vector;
-static const IndexerType IBF_DEFAULT_INDEXER_TYPE = IndexerType::boolean_vector;
 
 // Ref: https://github.com/daankolthof/bloomfilter/blob/master/bloomfilter/bloomfilter.h
 
@@ -41,7 +38,7 @@ public:
     }
     
     bool operator==(InvertibleBloomFilter const &obj) {
-        return this->m_indexer->isEquals(obj.m_indexer);
+        return *this->m_indexer == obj.m_indexer;
   	}
 
     int getCount() const {

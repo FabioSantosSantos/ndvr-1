@@ -14,12 +14,12 @@ namespace ndvr {
 class NextHopIBFBased {
 public:
   NextHopIBFBased() {
-    m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS);
+    m_ibf = new InvertibleBloomFilter();
   }
 
-  NextHopIBFBased(int count, size_t number)
+  NextHopIBFBased(size_t number)
   {
-      m_ibf = new InvertibleBloomFilter(IBF_DEFAULT_SIZE, IBF_DEFAULT_QTD_HASH_FUNCTIONS, count, number);
+      m_ibf = new InvertibleBloomFilter(number);
   }
 
   void AddRouterId(std::string router_id) {
@@ -35,8 +35,9 @@ public:
     return m_ibf->contains(router_id);
   }
 
-  uint32_t getCost() {return m_ibf->getCount();}
-  uint32_t getCount() const {return m_ibf->getCount();}
+  size_t getCost() {return m_ibf->getCount();}
+  
+  size_t getCount() const {return m_ibf->getCount();}
 
   bool operator==(NextHopIBFBased const &obj) {
     return *this->m_ibf == *obj.m_ibf;

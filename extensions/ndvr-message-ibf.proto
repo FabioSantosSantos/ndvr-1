@@ -9,7 +9,6 @@ package ndn.ndvr.proto;
 message DvInfoIBF {
   message NextHop {
     uint64 number = 1;
-    uint32 count = 2;
   }
 
   message Entry {

@@ -868,7 +868,6 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
       nexthop.AddRouterId(routerPrefix_Uri);
 
       pathVectors.addPath(0, nexthop);
-      //NS_LOG_INFO("EncodeDvInfoIBF() - pathVectors new size: " << pathVectors.size());
     }
 
     for (auto itPath = pathVectors.begin(); itPath != pathVectors.end(); itPath++) {
@@ -877,7 +876,6 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
       std::vector<NextHopIBFBased> seenNextHops;
 
       for (auto &nextHop : itPath->second) {
-        //NS_LOG_INFO("EncodeDvInfoIBF() - nextHop BEFORE= " << nextHop);
         nextHop = nextHop.copy();
         nextHop.AddRouterId(routerPrefix_Uri);
 
@@ -902,7 +900,6 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
         entry->set_originator(routingEntry.GetOriginator());
 
         proto::DvInfoIBF_NextHop *next_hop = new proto::DvInfoIBF_NextHop();
-        next_hop->set_count(nextHop.getCount());
         next_hop->set_number(nextHop.getNumber());
         entry->set_allocated_next_hops(next_hop);
                    

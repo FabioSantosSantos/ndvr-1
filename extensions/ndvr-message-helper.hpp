@@ -34,21 +34,22 @@ inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
     auto prefix = entry.prefix();
     auto seq = entry.seq();
     auto originator = entry.originator();
-    auto cost = entry.next_hops().count();
-    auto count =  entry.next_hops().count();
     auto number = entry.next_hops().number();
+
+    auto nextHop = NextHopIBFBased(number);
+
+    auto cost = nextHop.getCount();
+
 
     std::cout << "###### DecodeDvInfo ######" << std::endl;
     std::cout << "  prefix = " << prefix << ", seq = " << seq
               << ", originator = " << originator << ", cost = " << cost
-              << ", count = " << count
+              << ", count = " << nextHop.getCount()
               << std::endl;
 
 
     std::cout << "  next hops (number) = " << number << std::endl;
     std::cout << "  next hops (bits) = " << std::bitset<64>(number) << std::endl;
-
-    auto nextHop = NextHopIBFBased(count, number);
 
     auto it = prefixPathVector.find(prefix);
 
@@ -61,7 +62,7 @@ inline RoutingTable DecodeDvInfoIBF(const proto::DvInfoIBF &dvinfo_proto) {
                                      // it later in the processingDvInfo code
     std::cout << "  pathvector = " << pathVectors << std::endl;
 
-    RoutingEntry re = RoutingEntry(prefix, seq, originator, nextHop.getCost(), pathVectors);
+    RoutingEntry re = RoutingEntry(prefix, seq, originator, cost, pathVectors);
 
     dvinfo[prefix] = re;
   }

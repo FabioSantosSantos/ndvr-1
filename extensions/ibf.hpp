@@ -8,20 +8,17 @@
 #include <algorithm>
 
 
-
-static const int IBF_DEFAULT_QTD_HASH_FUNCTIONS = 12;
-
 // Ref: https://github.com/daankolthof/bloomfilter/blob/master/bloomfilter/bloomfilter.h
 
 class InvertibleBloomFilter {
 public:
 
-    InvertibleBloomFilter(int size, int hashFunctions){
-        m_indexer = new SingleNumberIndexer(size, hashFunctions);
+    InvertibleBloomFilter(){
+        m_indexer = new SingleNumberIndexer();
     }
 
-    InvertibleBloomFilter(int size, int hashFunctions, int count, size_t number){
-        m_indexer = new SingleNumberIndexer(size, hashFunctions, count, number);
+    InvertibleBloomFilter(size_t number){
+        m_indexer = new SingleNumberIndexer(number);
     }
 
 
@@ -41,15 +38,12 @@ public:
         return *this->m_indexer == obj.m_indexer;
   	}
 
-    int getCount() const {
+    size_t getCount() const {
         return m_indexer->getCount();
     }
 
     InvertibleBloomFilter *copy(){
-    	return new InvertibleBloomFilter(this->m_indexer->getSize(), 
-    		this->m_indexer->getHashFunctions(), 
-    		this->m_indexer->getCount(), 
-    		this->m_indexer->getNumber());
+    	return new InvertibleBloomFilter(this->m_indexer->getNumber());
     }
 
     size_t getNumber() const{

@@ -9,17 +9,21 @@
 #include <bitset>
 
 static const int IBF_DEFAULT_SIZE = 64; //32 ou 64
+static const int IBF_DEFAULT_BITS_TO_COUNTER = 5;
+static const int IBF_DEFAULT_FINAL_BIT_ARRAY_SIZE = IBF_DEFAULT_SIZE - IBF_DEFAULT_BITS_TO_COUNTER;
+static const int IBF_DEFAULT_QTD_HASH_FUNCTIONS = 3;
+
 
 class SingleNumberIndexer {
 public:
-    SingleNumberIndexer(int size, int hashFunctions)
-        : m_size(size), m_hashFunctions(hashFunctions), m_count(0) {
+    SingleNumberIndexer():
+        m_count(0){
             m_bitset =  std::bitset<IBF_DEFAULT_SIZE>();
         }
 
-    SingleNumberIndexer(int size, int hashFunctions, int count, size_t number)
-        : m_size(size), m_hashFunctions(hashFunctions), m_count(count) {
-            m_bitset =  std::bitset<IBF_DEFAULT_SIZE>(number);
+    SingleNumberIndexer(size_t number){
+            m_bitset = std::bitset<IBF_DEFAULT_SIZE>(number);
+            m_count = getCountIntoNumber();
         }
 
     void insert(const std::string& element) {
@@ -27,13 +31,15 @@ public:
             _insert(element, i);
         }
         ++m_count;
+        updateCountIntoNumber();
     }
 
     void remove(const std::string& element) {
         for (int i = 0; i < m_hashFunctions; i++){
             _remove(element, i);
         }
-         --m_count;
+        --m_count;
+        updateCountIntoNumber();
     }
 
     bool contains(const std::string& element) {
@@ -57,8 +63,10 @@ public:
     }
 
     int getSize() {return m_size;}
+
+    size_t getCount(){return m_count;}
+
     int getHashFunctions() {return m_hashFunctions;}
-    int getCount() {return m_count;}
 
     bool operator==(SingleNumberIndexer *other) {
         return getNumber() == other->getNumber() and getCount() == other->getCount();
@@ -67,8 +75,9 @@ public:
 
 
 protected:
-    int m_size;
-    int m_hashFunctions;
+    int m_size = IBF_DEFAULT_SIZE;
+    int m_real_size = IBF_DEFAULT_FINAL_BIT_ARRAY_SIZE;
+    int m_hashFunctions = IBF_DEFAULT_QTD_HASH_FUNCTIONS;
     int m_count;
     std::bitset<IBF_DEFAULT_SIZE> m_bitset;  
 
@@ -89,13 +98,33 @@ protected:
 
     size_t get_index(const std::string& element, int hashFunctionNumber){
         auto hashValue = hash(element, hashFunctionNumber);
-        return hashValue % m_size;
+        return hashValue % m_real_size + IBF_DEFAULT_BITS_TO_COUNTER;
         
     }
 
     uint64_t hash(const std::string& element, int index) {
         return std::hash<std::string>{}(element + std::to_string(index));
     }
+
+
+    size_t getCountIntoNumber() {
+        std::bitset<IBF_DEFAULT_BITS_TO_COUNTER> count_bitset;
+
+        for (int i = 0; i < IBF_DEFAULT_BITS_TO_COUNTER; i++){
+            count_bitset[i] = m_bitset[i];
+        }
+
+        return count_bitset.to_ulong();
+    }
+
+    void updateCountIntoNumber(){
+        std::bitset<IBF_DEFAULT_BITS_TO_COUNTER> count_bitset(m_count);
+
+        for (int i = 0; i < IBF_DEFAULT_BITS_TO_COUNTER; i++){
+            m_bitset[i] = count_bitset[i];
+        }
+    }
+
 
 };
 

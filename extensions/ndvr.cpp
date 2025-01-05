@@ -116,8 +116,23 @@ void Ndvr::Start() {
   SendHelloInterest();
 }
 
-void Ndvr::Stop() {}
+void Ndvr::printRoutingTable() {
+  NS_LOG_INFO("Tabela de Roteamento:");
+  for (auto it = m_routingTable.begin(); it != m_routingTable.end(); ++it) {
+    const auto& routingEntry = it->second;
+    NS_LOG_INFO("Prefixo: " << routingEntry.GetName()
+                 //<< ", Próximo Salto: " << routingEntry.GetFaceId());
+                 //<< ", Número de Saltos: " << routingEntry.GetCost());
+                 << ", Próximo Salto: " << it->second.getNextHopsStr());
+  }
+}
 
+
+void Ndvr::Stop() {
+
+  // Imprimir a tabela de roteamento antes de parar
+  printRoutingTable();
+}
 void Ndvr::run() { m_face.processEvents(); }
 
 void Ndvr::cleanup() {
@@ -637,6 +652,7 @@ void Ndvr::OnHelloInterest(const ndn::Interest &interest, uint64_t inFaceId) {
       wait = false;
     SchedDvInfoInterest(neigh->second, wait);
   } else {
+    printRoutingTable();
     NS_LOG_INFO("NDVR converged - Skipped DvInfoInterest numPrefixes="
                 << numPrefixes
                 << " m_routingTable.size()=" << m_routingTable.size()
@@ -911,6 +927,8 @@ void Ndvr::EncodeDvInfoIBF(std::string &out) {
   }
   dvinfo_proto.AppendToString(&out);
   NS_LOG_INFO("EncodeDvInfoIBF()= " << out);
+  NS_LOG_INFO("SizeEncodeDvInfoIBF()= " << out.size());
+
 }
 
 // void Ndvr::EncodeDvInfo(std::string &out) {
@@ -1221,6 +1239,8 @@ void Ndvr::AdvNamePrefix(std::string name) {
     SendHelloInterest();
   }
 }
+
+
 
 uint64_t Ndvr::CreateUnicastFace(std::string mac) {
   //  ns3::Ptr<ns3::Node> thisNode =

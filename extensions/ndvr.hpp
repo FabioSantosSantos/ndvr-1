@@ -100,6 +100,8 @@ public:
 
   void SetHelloInterval(int x) { m_helloIntervalCur = x; }
 
+  void printRoutingTable(); // Declara função que imprime a routing-table
+
 private:
   typedef std::map<std::string, NeighborEntry> NeighborMap;
 
